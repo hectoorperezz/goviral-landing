@@ -1,9 +1,18 @@
 import { NextResponse } from "next/server";
 import { isValidInstagramReelUrl, addReelViewsOrder } from "@/lib/api";
 import { createCustomer, ShopifyCustomerInput } from "@/lib/shopify";
+import { sendVerificationEmail } from "@/lib/email";
 
 // Shopify Admin API token (stored server-side for security)
 const SHOPIFY_ADMIN_API_TOKEN = process.env.SHOPIFY_ADMIN_API_TOKEN || "";
+
+// Almacenamiento en memoria (se pierde al reiniciar el servidor)
+const pendingVerifications = new Map();
+
+// Generar un código de verificación aleatorio de 6 dígitos
+function generateVerificationCode(): string {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
 
 export async function POST(request: Request) {
   try {
@@ -36,63 +45,40 @@ export async function POST(request: Request) {
       );
     }
 
-    // Call the JustAnotherPanel API to add the order
-    const result = await addReelViewsOrder({ link: reelUrl });
+    // Generate verification code
+    const verificationCode = generateVerificationCode();
     
-    if (!result.success) {
-      console.error("Error adding reel views order:", result.error);
+    // Store verification data in memory (instead of file system)
+    const verificationData = {
+      name,
+      email,
+      instagramUrl: reelUrl,
+      verificationCode,
+      timestamp: Date.now(),
+      expiresAt: Date.now() + 30 * 60 * 1000 // 30 minutes expiry
+    };
+    
+    // Save to in-memory map
+    pendingVerifications.set(email, verificationData);
+    
+    // Send verification email
+    const emailResult = await sendVerificationEmail(
+      email,
+      name,
+      verificationCode
+    );
+    
+    if (!emailResult.success) {
       return NextResponse.json(
-        { 
-          message: "Error al procesar la solicitud. Por favor, inténtalo de nuevo.",
-          error: result.error 
-        },
+        { message: "Error al enviar el email de verificación. Por favor, inténtalo de nuevo." },
         { status: 500 }
       );
     }
     
-    // Create customer in Shopify
-    try {
-      // Parse the name (assuming format is "First Last")
-      const nameParts = name.split(" ");
-      const firstName = nameParts[0] || "";
-      const lastName = nameParts.slice(1).join(" ") || "";
-      
-      console.log("Creating Shopify customer with data:", {
-        name: name,
-        email: email,
-        instagramUrl: reelUrl
-      });
-      
-      // Create customer input object
-      const customerInput: ShopifyCustomerInput = {
-        firstName,
-        lastName,
-        email: email,
-        emailMarketingConsent: {
-          marketingState: "SUBSCRIBED",
-          marketingOptInLevel: "SINGLE_OPT_IN"
-        },
-        tags: ["instagram-trial"],
-        note: `Cliente creado a través de la prueba gratuita de Instagram. URL del reel: ${reelUrl}`
-      };
-      
-      // Use the utility function from shopify.ts
-      const shopifyResult = await createCustomer(customerInput, SHOPIFY_ADMIN_API_TOKEN);
-      
-      if (shopifyResult.success) {
-        console.log("Shopify customer created successfully:", shopifyResult.customerId);
-      } else {
-        console.error("Error creating Shopify customer:", shopifyResult.error);
-      }
-    } catch (shopifyError) {
-      // Log the error but don't fail the entire request
-      console.error("Error creating Shopify customer:", shopifyError);
-    }
-    
     // Return success response
     return NextResponse.json({
-      message: "¡Genial! Tu prueba de visualizaciones ha sido enviada.",
-      orderId: result.order
+      message: "Hemos enviado un código de verificación a tu email.",
+      email
     });
     
   } catch (error) {

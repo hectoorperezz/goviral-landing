@@ -1,11 +1,20 @@
 import { NextResponse } from "next/server";
 import { addReelViewsOrder } from "@/lib/api";
-import { addTrial } from "@/lib/fileStorage";
-import { verifyCode } from "@/lib/verification";
 import { createCustomer, ShopifyCustomerInput } from "@/lib/shopify";
 
 // Shopify Admin API token (stored server-side for security)
 const SHOPIFY_ADMIN_API_TOKEN = process.env.SHOPIFY_ADMIN_API_TOKEN || "";
+
+// Referencia al Map en el otro archivo
+// En un entorno real, usaríamos una base de datos o un servicio como Redis
+declare const pendingVerifications: Map<string, {
+  name: string;
+  email: string;
+  instagramUrl: string;
+  verificationCode: string;
+  timestamp: number;
+  expiresAt: number;
+}>;
 
 export async function POST(request: Request) {
   try {
@@ -21,19 +30,34 @@ export async function POST(request: Request) {
       );
     }
     
-    // Verify the code
-    const verificationResult = await verifyCode(email, code);
+    // Verify the code from in-memory storage
+    const verification = pendingVerifications.get(email);
     
-    if (!verificationResult.success || !verificationResult.verification) {
+    if (!verification) {
       return NextResponse.json(
-        { message: verificationResult.message || "Código de verificación inválido" },
+        { message: "No se encontró ninguna verificación pendiente para este email" },
         { status: 400 }
       );
     }
     
-    const { verification } = verificationResult;
+    // Check if verification has expired
+    if (Date.now() > verification.expiresAt) {
+      pendingVerifications.delete(email);
+      return NextResponse.json(
+        { message: "El código de verificación ha expirado. Por favor, solicita uno nuevo." },
+        { status: 400 }
+      );
+    }
     
-    // Call the JustAnotherPanel API to add the order
+    // Check if code matches
+    if (verification.verificationCode !== code) {
+      return NextResponse.json(
+        { message: "Código de verificación incorrecto" },
+        { status: 400 }
+      );
+    }
+    
+    // Code is valid, proceed with the order
     const result = await addReelViewsOrder({ link: verification.instagramUrl });
     
     if (!result.success) {
@@ -46,9 +70,6 @@ export async function POST(request: Request) {
         { status: 500 }
       );
     }
-    
-    // Record the trial to prevent duplicate trials
-    await addTrial(verification.email, verification.instagramUrl);
     
     // Create customer in Shopify
     try {
@@ -88,6 +109,9 @@ export async function POST(request: Request) {
       // Log the error but don't fail the entire request
       console.error("Error creating Shopify customer:", shopifyError);
     }
+    
+    // Remove verification from pending
+    pendingVerifications.delete(email);
     
     // Return success response
     return NextResponse.json({
