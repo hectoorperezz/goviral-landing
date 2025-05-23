@@ -1,18 +1,11 @@
 import { NextResponse } from "next/server";
-import { isValidInstagramReelUrl, addReelViewsOrder } from "@/lib/api";
-import { createCustomer, ShopifyCustomerInput } from "@/lib/shopify";
+import { isValidInstagramReelUrl } from "@/lib/api";
 import { sendVerificationEmail } from "@/lib/email";
-
-// Shopify Admin API token (stored server-side for security)
-const SHOPIFY_ADMIN_API_TOKEN = process.env.SHOPIFY_ADMIN_API_TOKEN || "";
-
-// Almacenamiento en memoria (se pierde al reiniciar el servidor)
-const pendingVerifications = new Map();
-
-// Generar un código de verificación aleatorio de 6 dígitos
-function generateVerificationCode(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-}
+import { 
+  generateVerificationCode, 
+  addPendingVerification, 
+  VerificationData 
+} from "@/lib/memoryStorage";
 
 export async function POST(request: Request) {
   try {
@@ -49,7 +42,7 @@ export async function POST(request: Request) {
     const verificationCode = generateVerificationCode();
     
     // Store verification data in memory (instead of file system)
-    const verificationData = {
+    const verificationData: VerificationData = {
       name,
       email,
       instagramUrl: reelUrl,
@@ -58,8 +51,8 @@ export async function POST(request: Request) {
       expiresAt: Date.now() + 30 * 60 * 1000 // 30 minutes expiry
     };
     
-    // Save to in-memory map
-    pendingVerifications.set(email, verificationData);
+    // Save to memory storage
+    addPendingVerification(email, verificationData);
     
     // Send verification email
     const emailResult = await sendVerificationEmail(

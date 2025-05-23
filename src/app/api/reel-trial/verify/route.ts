@@ -1,20 +1,13 @@
 import { NextResponse } from "next/server";
 import { addReelViewsOrder } from "@/lib/api";
 import { createCustomer, ShopifyCustomerInput } from "@/lib/shopify";
+import { 
+  getPendingVerification, 
+  removePendingVerification 
+} from "@/lib/memoryStorage";
 
 // Shopify Admin API token (stored server-side for security)
 const SHOPIFY_ADMIN_API_TOKEN = process.env.SHOPIFY_ADMIN_API_TOKEN || "";
-
-// Referencia al Map en el otro archivo
-// En un entorno real, usaríamos una base de datos o un servicio como Redis
-declare const pendingVerifications: Map<string, {
-  name: string;
-  email: string;
-  instagramUrl: string;
-  verificationCode: string;
-  timestamp: number;
-  expiresAt: number;
-}>;
 
 export async function POST(request: Request) {
   try {
@@ -31,7 +24,7 @@ export async function POST(request: Request) {
     }
     
     // Verify the code from in-memory storage
-    const verification = pendingVerifications.get(email);
+    const verification = getPendingVerification(email);
     
     if (!verification) {
       return NextResponse.json(
@@ -42,7 +35,7 @@ export async function POST(request: Request) {
     
     // Check if verification has expired
     if (Date.now() > verification.expiresAt) {
-      pendingVerifications.delete(email);
+      removePendingVerification(email);
       return NextResponse.json(
         { message: "El código de verificación ha expirado. Por favor, solicita uno nuevo." },
         { status: 400 }
@@ -111,7 +104,7 @@ export async function POST(request: Request) {
     }
     
     // Remove verification from pending
-    pendingVerifications.delete(email);
+    removePendingVerification(email);
     
     // Return success response
     return NextResponse.json({
