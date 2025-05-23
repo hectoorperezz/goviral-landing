@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, FormEvent, ChangeEvent } from "react";
-import EmailVerificationForm from "./EmailVerificationForm";
 
 // Extend Window interface to include trackGA function
 declare global {
@@ -23,7 +22,7 @@ interface FormErrors {
   reelUrl?: string;
 }
 
-type FormStep = "form" | "verification" | "success";
+type FormStep = "form" | "success";
 
 export default function InstagramReelTrial() {
   const [formData, setFormData] = useState<FormData>({
@@ -98,7 +97,7 @@ export default function InstagramReelTrial() {
     setSubmitStatus("idle");
     
     try {
-      const response = await fetch("/api/reel-trial/process", {
+      const response = await fetch("/api/reel-trial/direct-process", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -109,12 +108,18 @@ export default function InstagramReelTrial() {
       const data = await response.json();
       
       if (response.ok) {
-        // Move to verification step
-        setCurrentStep("verification");
+        // Show success immediately
+        setCurrentStep("success");
+        setOrderId(data.orderId || 123456); // Fallback order ID if not provided
         
-        // Track successful submission
+        // Track successful trial with GA4
         if (typeof window !== "undefined" && window.trackGA) {
-          window.trackGA("reel_trial_request_success", "form_success");
+          window.trackGA("reel_trial_complete", "trial_success");
+        }
+        
+        // Track conversion with Google Ads
+        if (typeof window !== "undefined" && window.sendGAdsConversion) {
+          window.sendGAdsConversion("AW-16805560957/reel_trial_complete", 0);
         }
       } else if (response.status === 409) {
         // Handle duplicate trial
@@ -145,56 +150,6 @@ export default function InstagramReelTrial() {
     } finally {
       setIsSubmitting(false);
     }
-  };
-  
-  const handleVerificationSuccess = (newOrderId: number) => {
-    setOrderId(newOrderId);
-    setCurrentStep("success");
-    
-    // Track successful trial with GA4
-    if (typeof window !== "undefined" && window.trackGA) {
-      window.trackGA("reel_trial_complete", "trial_success");
-    }
-    
-    // Track conversion with Google Ads
-    if (typeof window !== "undefined" && window.sendGAdsConversion) {
-      window.sendGAdsConversion("AW-16805560957/reel_trial_complete", 0);
-    }
-  };
-
-  const handleResendCode = async () => {
-    try {
-      const response = await fetch("/api/reel-trial/process", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-      
-      const data = await response.json();
-      
-      if (response.ok) {
-        // Track resend success
-        if (typeof window !== "undefined" && window.trackGA) {
-          window.trackGA("reel_trial_resend_success", "verification_interaction");
-        }
-      } else {
-        // Track resend error
-        if (typeof window !== "undefined" && window.trackGA) {
-          window.trackGA("reel_trial_resend_error", "verification_error");
-        }
-      }
-    } catch (error) {
-      // Track resend connection error
-      if (typeof window !== "undefined" && window.trackGA) {
-        window.trackGA("reel_trial_resend_connection_error", "verification_error");
-      }
-    }
-  };
-
-  const handleChangeEmail = () => {
-    setCurrentStep("form");
   };
 
   const renderFormStep = () => {
@@ -329,19 +284,6 @@ export default function InstagramReelTrial() {
       </form>
     );
   };
-  
-  const renderVerificationStep = () => {
-    return (
-      <>
-        <EmailVerificationForm
-          email={formData.email}
-          onVerificationSuccess={handleVerificationSuccess}
-          onResendCode={handleResendCode}
-          onChangeEmail={handleChangeEmail}
-        />
-      </>
-    );
-  };
 
   const renderSuccessStep = () => {
     return (
@@ -353,7 +295,7 @@ export default function InstagramReelTrial() {
         </div>
         
         <h3 className="text-2xl font-bold text-gray-900 mb-3">
-          ¡Verificación completada!
+          ¡Solicitud completada!
         </h3>
         
         <div className="bg-gradient-to-r from-[#FF7A00] via-[#FF0169] to-[#D300C5] p-px rounded-xl mb-6">
@@ -474,7 +416,6 @@ export default function InstagramReelTrial() {
           <div className="lg:w-7/12 bg-white rounded-2xl p-6 md:p-8 shadow-lg border border-gray-100">
             <div className="max-w-md mx-auto">
               {currentStep === "form" && renderFormStep()}
-              {currentStep === "verification" && renderVerificationStep()}
               {currentStep === "success" && renderSuccessStep()}
               
               <p className="mt-6 text-xs text-gray-500 text-center">
