@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -35,14 +36,18 @@ export default function RootLayout({
           name="google-site-verification"
           content="wj6ck1acMc3rlUupdXEucQSQ6gMRotyLWkeuvSC_onA"
         />
-
-        {/* GA4 + Google Ads (enhanced conversions + auto-linker) */}
-        <script
-          async
+      </head>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white`}>
+        {children}
+        
+        {/* Google Analytics and Ads Scripts - Using Next.js Script component to avoid hydration errors */}
+        <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-715BKDY6ZV"
-        ></script>
-        <script
+          strategy="afterInteractive"
+        />
+        <Script
           id="gtag-init"
+          strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               window.dataLayer = window.dataLayer || [];
@@ -60,10 +65,9 @@ export default function RootLayout({
             `,
           }}
         />
-
-        {/* Helpers para disparar eventos GA4 y conversiones Google Ads */}
-        <script
+        <Script
           id="ga-helpers"
+          strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               window.trackGA = function(action, label) {
@@ -87,9 +91,6 @@ export default function RootLayout({
             `,
           }}
         />
-      </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white`}>
-        {children}
       </body>
     </html>
   );
