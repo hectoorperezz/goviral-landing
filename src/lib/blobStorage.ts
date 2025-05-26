@@ -55,13 +55,14 @@ if (IS_DEV) {
  * Generic function to upload JSON data to Vercel Blob storage
  * Falls back to file storage in development mode if Blob storage fails
  */
-export async function uploadJson<T>(key: string, data: T): Promise<string> {
+export async function uploadJson<T>(key: string, data: T, allowOverwrite: boolean = false): Promise<string> {
   try {
     const jsonString = JSON.stringify(data);
     const { url } = await put(key, jsonString, { 
       access: 'public',
       addRandomSuffix: false, // We want to control our key names exactly
-      token: BLOB_TOKEN
+      token: BLOB_TOKEN,
+      allowOverwrite
     });
     
     return url;
@@ -306,9 +307,9 @@ export interface Trial {
 /**
  * Save a completed trial to Blob storage
  */
-export async function saveTrial(trial: Trial): Promise<string> {
+export async function saveTrial(trial: Trial, allowOverwrite: boolean = true): Promise<string> {
   const key = `${TRIALS_PREFIX}${trial.email}.json`;
-  return uploadJson<Trial>(key, trial);
+  return uploadJson<Trial>(key, trial, allowOverwrite);
 }
 
 /**
@@ -433,7 +434,7 @@ export interface PendingVerification {
 export async function savePendingVerification(verification: PendingVerification): Promise<string> {
   // Include timestamp in key to allow multiple verification attempts
   const key = `${VERIFICATIONS_PREFIX}${verification.email}-${verification.createdAt}.json`;
-  return uploadJson<PendingVerification>(key, verification);
+  return uploadJson<PendingVerification>(key, verification, true);
 }
 
 /**
@@ -506,7 +507,7 @@ export async function updatePendingVerification(
 ): Promise<string> {
   try {
     const key = `${VERIFICATIONS_PREFIX}${verification.email}-${verification.createdAt}.json`;
-    return uploadJson<PendingVerification>(key, verification);
+    return uploadJson<PendingVerification>(key, verification, true);
   } catch (error) {
     if (IS_DEV) {
       console.warn(`[blobStorage] Blob storage failed for updating verification for ${verification.email}, using file fallback:`, error);
