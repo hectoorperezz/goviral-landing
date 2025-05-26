@@ -1,36 +1,102 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GoViral Instagram Reels Trial
 
-## Getting Started
+A Next.js application that allows users to try GoViral's Instagram reel view service with email verification and promotional discount codes.
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Instagram Reels Trial**: Users can try 500 free views on their Instagram reels
+- **Email Verification**: Secure verification system ensures valid email addresses
+- **Discount Code System**: Users receive a promotional discount code ("PRUEBAREEL50") after completing the trial
+- **Shopify Integration**: Customer information is saved to Shopify for marketing purposes
+- **Anti-Abuse Measures**: Prevents duplicate trial requests from the same email or Instagram reel
+- **Responsive Design**: Works seamlessly across all devices
+
+## Tech Stack
+
+- **Framework**: Next.js 15.3.2 with App Router
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **Storage**: Vercel Blob Storage with file-based fallback for development
+- **Email**: Nodemailer with SMTP configuration
+- **APIs**: Integration with JustAnotherPanel for Instagram views and Shopify Admin API for customer management
+
+## Setup
+
+### Prerequisites
+
+- Node.js 18.x or higher
+- npm or yarn
+- Vercel account (for deployment and Blob Storage)
+- Shopify store with Admin API access
+- SMTP email account (Office 365 recommended)
+
+### Environment Variables
+
+Create a `.env.local` file in the root directory with the following variables:
+
+```
+# Vercel Blob Storage
+BLOB_READ_WRITE_TOKEN=your_vercel_blob_token
+
+# JustAnotherPanel API
+JUST_ANOTHER_PANEL_API_KEY=your_api_key
+
+# Shopify API
+SHOPIFY_STORE_URL=your-store.myshopify.com
+SHOPIFY_API_VERSION=2023-07
+SHOPIFY_ADMIN_API_TOKEN=your_admin_api_token
+
+# Email Configuration
+EMAIL_FROM=soporte@yourdomain.com
+EMAIL_HOST=smtp.office365.com
+EMAIL_PORT=587
+EMAIL_SECURE=false
+EMAIL_USER=soporte@yourdomain.com
+EMAIL_PASSWORD=your_email_password
+
+# Development Options (optional)
+USE_TEST_ACCOUNT=false
+MOCK_EMAILS=false
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Installation
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/gvsocial.git
+cd gvsocial
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2. Install dependencies:
+```bash
+npm install
+```
 
-## Learn More
+3. Run the development server:
+```bash
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+4. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project Structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **src/app**: Next.js app router pages and API routes
+- **src/components**: React components including Instagram reel trial form
+- **src/lib**: Utility functions for API integrations, storage, and email
+- **scripts**: Migration and utility scripts
+- **data**: Local storage for development fallback
 
-## Deploy on Vercel
+## API Endpoints
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **POST /api/reel-trial/request**: Create a new trial request and send verification email
+- **POST /api/reel-trial/verify**: Verify email with code and process the trial
+- **POST /api/reel-trial/direct-process**: Direct processing endpoint (admin use only)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deployment
+
+Refer to the [Deployment Guide](DEPLOYMENT.md) for detailed instructions on deploying to Vercel.
+
+## License
+
+Proprietary - All rights reserved 

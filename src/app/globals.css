@@ -36,6 +36,18 @@ body {
   letter-spacing: -0.015em;
 }
 
+/* Animation for the copy notification tooltip */
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translate(-50%, -15px); }
+  20% { opacity: 1; transform: translate(-50%, 0); }
+  80% { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, -15px); }
+}
+
+.animate-fade-in-out {
+  animation: fadeInOut 2s ease-in-out forwards;
+}
+
 @layer base {
   html {
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';

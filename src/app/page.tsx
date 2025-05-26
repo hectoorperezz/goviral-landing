@@ -126,7 +126,7 @@ export default function Home() {
                 Impulsa tu presencia online
               </span>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tight text-gray-900">
-                Crece en{" "}
+                Tu aliado en{" "}
                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-[rgb(214,77,173)] to-[rgb(244,102,110)]">
                   Redes Sociales
                 </span>

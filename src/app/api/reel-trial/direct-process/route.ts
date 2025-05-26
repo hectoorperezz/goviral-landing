@@ -1,104 +1,113 @@
-import { NextResponse } from "next/server";
-import { isValidInstagramReelUrl, addReelViewsOrder } from "@/lib/api";
-import { createCustomer, ShopifyCustomerInput } from "@/lib/shopify";
+import { NextRequest, NextResponse } from 'next/server';
+import { processTrial } from '@/lib/processTrial';
+import { createCustomer } from '@/lib/shopify';
+import { checkTrialExists } from '@/lib/blobStorage';
 
-// Shopify Admin API token (stored server-side for security)
-const SHOPIFY_ADMIN_API_TOKEN = process.env.SHOPIFY_ADMIN_API_TOKEN || "";
+const API_KEY = 'my-secret-api-key';
+const DISCOUNT_CODE = 'PRUEBAREEL50';
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  console.log('[direct-process] Processing direct trial request');
+  
   try {
+    // Simple API key check - in production, use a more secure method
+    const providedApiKey = request.headers.get('x-api-key');
+    
+    if (!providedApiKey || providedApiKey !== API_KEY) {
+      console.log('[direct-process] API key validation failed');
+      return NextResponse.json(
+        { error: 'Unauthorized - Invalid API key' },
+        { status: 401 }
+      );
+    }
+    
     // Parse the request body
     const body = await request.json();
-    const { name, email, reelUrl } = body;
+    const { name, email, reelUrl, referralCode } = body;
     
     // Validate required fields
     if (!name || !email || !reelUrl) {
+      console.log('[direct-process] Missing required fields:', { name, email, reelUrl });
       return NextResponse.json(
-        { message: "Nombre, email y URL del reel son obligatorios" },
+        { error: 'Missing required fields: name, email, reelUrl' },
         { status: 400 }
       );
     }
     
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return NextResponse.json(
-        { message: "Formato de email inválido" },
-        { status: 400 }
-      );
-    }
+    // Check for trial existence to prevent duplicates
+    console.log(`[direct-process] Checking if trial exists for email: ${email}, reel: ${reelUrl}`);
+    const trialCheck = await checkTrialExists(email, reelUrl);
     
-    // Validate Instagram reel URL
-    if (!isValidInstagramReelUrl(reelUrl)) {
+    if (trialCheck.exists) {
+      console.log(`[direct-process] Trial already exists for ${email} with reel ${reelUrl}`);
       return NextResponse.json(
-        { message: "URL de Instagram reel inválida" },
+        { 
+          error: 'Ya has solicitado un trial para este reel', 
+          message: 'Ya has solicitado un trial para este reel. No puedes solicitar más de un trial para el mismo reel.' 
+        },
         { status: 400 }
       );
     }
 
-    // Call the JustAnotherPanel API to add the order
-    const result = await addReelViewsOrder({ link: reelUrl });
-    
+    // Process the trial (add to queue or process immediately)
+    console.log(`[direct-process] Processing trial for ${email} with reel ${reelUrl}`);
+    const result = await processTrial({
+      name,
+      email,
+      reelUrl,
+      referralCode,
+      verificationMethod: 'direct', // Note that this was directly processed, not verified by email
+    });
+
     if (!result.success) {
-      console.error("Error adding reel views order:", result.error);
+      console.error(`[direct-process] Error processing trial:`, result.error);
       return NextResponse.json(
-        { 
-          message: "Error al procesar la solicitud. Por favor, inténtalo de nuevo.",
-          error: result.error 
-        },
+        { error: result.error || 'Failed to process trial' },
         { status: 500 }
       );
     }
-    
-    // Create customer in Shopify
+
+    // Create Shopify customer
     try {
-      // Parse the name (assuming format is "First Last")
-      const nameParts = name.split(" ");
-      const firstName = nameParts[0] || "";
-      const lastName = nameParts.slice(1).join(" ") || "";
-      
-      console.log("Creating Shopify customer with data:", {
-        name: name,
-        email: email,
-        instagramUrl: reelUrl
+      console.log(`[direct-process] Creating Shopify customer for ${email}`);
+      const shopifyResult = await createCustomer({
+        email,
+        firstName: name.split(' ')[0],
+        lastName: name.split(' ').slice(1).join(' ') || '',
       });
       
-      // Create customer input object
-      const customerInput: ShopifyCustomerInput = {
-        firstName,
-        lastName,
-        email: email,
-        emailMarketingConsent: {
-          marketingState: "SUBSCRIBED",
-          marketingOptInLevel: "SINGLE_OPT_IN"
-        },
-        tags: ["instagram-trial"],
-        note: `Cliente creado a través de la prueba gratuita de Instagram. URL del reel: ${reelUrl}`
-      };
-      
-      // Use the utility function from shopify.ts
-      const shopifyResult = await createCustomer(customerInput, SHOPIFY_ADMIN_API_TOKEN);
-      
       if (shopifyResult.success) {
-        console.log("Shopify customer created successfully:", shopifyResult.customerId);
+        console.log(`[direct-process] Shopify customer created successfully for ${email}`);
       } else {
-        console.error("Error creating Shopify customer:", shopifyResult.error);
+        console.warn(`[direct-process] Failed to create Shopify customer:`, shopifyResult.error);
       }
     } catch (shopifyError) {
-      // Log the error but don't fail the entire request
-      console.error("Error creating Shopify customer:", shopifyError);
+      // Don't fail the entire process if Shopify customer creation fails
+      console.error(`[direct-process] Error creating Shopify customer:`, shopifyError);
     }
-    
-    // Return success response
+
+    // Return success response with discount code
+    console.log(`[direct-process] Trial processed successfully for ${email}`);
     return NextResponse.json({
-      message: "¡Genial! Tu prueba de visualizaciones ha sido enviada.",
-      orderId: result.order
+      success: true,
+      message: 'Trial processed successfully',
+      data: {
+        name,
+        email,
+        reelUrl,
+        orderId: result.order
+      },
+      promotion: {
+        discountCode: DISCOUNT_CODE,
+        description: '50% de descuento en tu próxima compra',
+        validityDays: 7,
+        shopUrl: 'https://goviral.es'
+      }
     });
-    
   } catch (error) {
-    console.error("Error processing request:", error);
+    console.error('[direct-process] Unexpected error:', error);
     return NextResponse.json(
-      { message: "Error interno del servidor" },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

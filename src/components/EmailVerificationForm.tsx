@@ -11,13 +11,17 @@ declare global {
 
 interface EmailVerificationFormProps {
   email: string;
-  onVerificationSuccess: (orderId: number) => void;
+  name?: string;
+  reelUrl?: string;
+  onVerificationSuccess: (orderId: number, promotionData?: any) => void;
   onResendCode: () => void;
   onChangeEmail: () => void;
 }
 
 export default function EmailVerificationForm({
   email,
+  name = "Usuario",
+  reelUrl = "https://www.instagram.com/reel/placeholder",
   onVerificationSuccess,
   onResendCode,
   onChangeEmail
@@ -28,9 +32,20 @@ export default function EmailVerificationForm({
   const [error, setError] = useState<string | null>(null);
   const [resendDisabled, setResendDisabled] = useState(false);
   const [resendCountdown, setResendCountdown] = useState(0);
+  const [showDirectProcessOption, setShowDirectProcessOption] = useState(false);
+  const [directProcessLoading, setDirectProcessLoading] = useState(false);
   
   // Create refs for each input
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  // Show direct process option after 30 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowDirectProcessOption(true);
+    }, 30000); // 30 seconds
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   // Handle change for each digit input
   const handleDigitChange = (index: number, value: string) => {
@@ -123,8 +138,8 @@ export default function EmailVerificationForm({
           window.trackGA("reel_trial_verification_success", "verification_success");
         }
         
-        // Call the success callback with the order ID
-        onVerificationSuccess(data.orderId);
+        // Call the success callback with the order ID and promotion data
+        onVerificationSuccess(data.orderId, data.promotion);
       } else {
         setError(data.message || "Error al verificar el código. Por favor, inténtalo de nuevo.");
         
@@ -172,6 +187,53 @@ export default function EmailVerificationForm({
     }, 1000);
   };
 
+  // Handle direct process fallback option
+  const handleDirectProcess = async () => {
+    // Track direct process attempt
+    if (typeof window !== "undefined" && window.trackGA) {
+      window.trackGA("reel_trial_direct_process", "verification_bypass");
+    }
+    
+    setDirectProcessLoading(true);
+    
+    try {
+      // Call the direct-process API instead
+      const response = await fetch("/api/reel-trial/direct-process", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": "my-secret-api-key", // This should match the API_KEY in the route
+        },
+        body: JSON.stringify({
+          email,
+          name,
+          reelUrl,
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        // Track successful direct process
+        if (typeof window !== "undefined" && window.trackGA) {
+          window.trackGA("reel_trial_direct_process_success", "verification_bypass_success");
+        }
+        
+        // Call the success callback with the order ID and promotion data
+        onVerificationSuccess(data.data?.orderId, data.promotion);
+      } else if (response.status === 409) {
+        // Handle duplicate error
+        setError("Ya has utilizado tu prueba gratuita.");
+      } else {
+        setError(data.message || data.error || "Error al procesar la solicitud. Por favor, inténtalo de nuevo.");
+      }
+    } catch (error) {
+      setError("Error de conexión. Por favor, inténtalo de nuevo.");
+    } finally {
+      setDirectProcessLoading(false);
+    }
+  };
+
   return (
     <div className="max-w-md mx-auto">
       <div className="text-center mb-8">
@@ -186,6 +248,14 @@ export default function EmailVerificationForm({
         <p className="text-gray-500">
           Hemos enviado un código de verificación a <span className="font-medium text-gray-700">{email}</span>
         </p>
+        
+        {/* Email check notice */}
+        <div className="mt-3 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
+          <p>
+            <strong>¿No recibes el email?</strong> Revisa tu carpeta de spam o correo no deseado. 
+            El email puede tardar unos minutos en llegar.
+          </p>
+        </div>
       </div>
       
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -280,6 +350,44 @@ export default function EmailVerificationForm({
           Cambiar email
         </button>
       </div>
+      
+      {/* Direct process fallback option */}
+      {showDirectProcessOption && (
+        <div className="mt-8 border-t border-gray-200 pt-6">
+          <div className="text-center">
+            <h4 className="text-sm font-medium text-gray-700 mb-3">
+              ¿Problemas para recibir el código?
+            </h4>
+            <p className="text-xs text-gray-500 mb-4">
+              Si tienes problemas para recibir el código de verificación, puedes intentar el proceso directo.
+            </p>
+            <button
+              type="button"
+              onClick={handleDirectProcess}
+              disabled={directProcessLoading}
+              className="text-sm flex items-center justify-center mx-auto gap-1.5 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
+            >
+              {directProcessLoading ? (
+                <>
+                  <svg className="animate-spin h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Procesando...
+                </>
+              ) : (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                  </svg>
+                  Continuar sin verificación
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 

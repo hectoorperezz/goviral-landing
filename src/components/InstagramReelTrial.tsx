@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, FormEvent, ChangeEvent } from "react";
+import EmailVerificationForm from "./EmailVerificationForm";
 
 // Extend Window interface to include trackGA function
 declare global {
@@ -22,7 +23,8 @@ interface FormErrors {
   reelUrl?: string;
 }
 
-type FormStep = "form" | "success";
+// Add verification step to form steps
+type FormStep = "form" | "verification" | "success";
 
 export default function InstagramReelTrial() {
   const [formData, setFormData] = useState<FormData>({
@@ -36,6 +38,8 @@ export default function InstagramReelTrial() {
   const [statusMessage, setStatusMessage] = useState("");
   const [currentStep, setCurrentStep] = useState<FormStep>("form");
   const [orderId, setOrderId] = useState<number | null>(null);
+  const [promotionData, setPromotionData] = useState<any>(null);
+  const [showCopyNotification, setShowCopyNotification] = useState(false);
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -97,7 +101,8 @@ export default function InstagramReelTrial() {
     setSubmitStatus("idle");
     
     try {
-      const response = await fetch("/api/reel-trial/direct-process", {
+      // Changed endpoint from direct-process to request to trigger email verification
+      const response = await fetch("/api/reel-trial/request", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -108,18 +113,21 @@ export default function InstagramReelTrial() {
       const data = await response.json();
       
       if (response.ok) {
-        // Show success immediately
-        setCurrentStep("success");
-        setOrderId(data.orderId || 123456); // Fallback order ID if not provided
+        // Move to verification step instead of success
+        setCurrentStep("verification");
         
-        // Track successful trial with GA4
+        // Track successful verification request
         if (typeof window !== "undefined" && window.trackGA) {
-          window.trackGA("reel_trial_complete", "trial_success");
+          window.trackGA("reel_trial_verification_sent", "verification_step");
         }
         
-        // Track conversion with Google Ads
-        if (typeof window !== "undefined" && window.sendGAdsConversion) {
-          window.sendGAdsConversion("AW-16805560957/reel_trial_complete", 0);
+        // Show a toast or notification about checking spam folders
+        const emailDomain = formData.email.split('@')[1];
+        if (emailDomain) {
+          const isCommonProvider = ['gmail.com', 'hotmail.com', 'outlook.com', 'yahoo.com', 'icloud.com'].includes(emailDomain.toLowerCase());
+          if (isCommonProvider) {
+            console.log(`Email sent to common provider: ${emailDomain}. Check spam folder instructions shown.`);
+          }
         }
       } else if (response.status === 409) {
         // Handle duplicate trial
@@ -149,6 +157,67 @@ export default function InstagramReelTrial() {
       }
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Handler for verification success
+  const handleVerificationSuccess = (verifiedOrderId: number, promotion: any) => {
+    setOrderId(verifiedOrderId || 123456); // Fallback order ID if not provided
+    setPromotionData(promotion || { 
+      discountCode: 'PRUEBAREEL50',
+      description: '50% de descuento en tu próxima compra',
+      validityDays: 7,
+      shopUrl: 'https://goviral.es'
+    });
+    setCurrentStep("success");
+    
+    // Track successful trial with GA4
+    if (typeof window !== "undefined" && window.trackGA) {
+      window.trackGA("reel_trial_complete", "trial_success");
+    }
+    
+    // Track conversion with Google Ads
+    if (typeof window !== "undefined" && window.sendGAdsConversion) {
+      window.sendGAdsConversion("AW-16805560957/reel_trial_complete", 0);
+    }
+  };
+
+  // Handler for resending verification code
+  const handleResendCode = async () => {
+    try {
+      const response = await fetch("/api/reel-trial/request", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+      
+      if (!response.ok) {
+        console.error("Error resending verification code");
+      }
+    } catch (error) {
+      console.error("Error resending verification code:", error);
+    }
+  };
+
+  // Handler for changing email
+  const handleChangeEmail = () => {
+    setCurrentStep("form");
+  };
+
+  // Function to copy discount code to clipboard
+  const copyDiscountCode = () => {
+    const discountCode = promotionData?.discountCode || 'PRUEBAREEL50';
+    navigator.clipboard.writeText(discountCode);
+    // Show notification
+    setShowCopyNotification(true);
+    // Hide after 2 seconds
+    setTimeout(() => setShowCopyNotification(false), 2000);
+    
+    // Track discount code copy event
+    if (typeof window !== "undefined" && window.trackGA) {
+      window.trackGA("discount_code_copied", "conversion");
     }
   };
 
@@ -285,7 +354,26 @@ export default function InstagramReelTrial() {
     );
   };
 
+  const renderVerificationStep = () => {
+    return (
+      <EmailVerificationForm
+        email={formData.email}
+        name={formData.name}
+        reelUrl={formData.reelUrl}
+        onVerificationSuccess={handleVerificationSuccess}
+        onResendCode={handleResendCode}
+        onChangeEmail={handleChangeEmail}
+      />
+    );
+  };
+
   const renderSuccessStep = () => {
+    // Get discount code from promotion data or use default
+    const discountCode = promotionData?.discountCode || 'PRUEBAREEL50';
+    const discountDescription = promotionData?.description || '50% de descuento en tu próxima compra';
+    const validityDays = promotionData?.validityDays || 7;
+    const shopUrl = promotionData?.shopUrl || 'https://goviral.es';
+
     return (
       <div className="text-center">
         <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-100 mb-6 animate-bounce">
@@ -310,6 +398,49 @@ export default function InstagramReelTrial() {
                 </span>
               </div>
             )}
+          </div>
+        </div>
+        
+        {/* Discount Code Section */}
+        <div className="bg-gradient-to-r from-yellow-400 via-orange-500 to-[#FF0169] p-px rounded-xl mb-6">
+          <div className="bg-white p-5 rounded-xl">
+            <div className="flex flex-col items-center">
+              <div className="flex items-center justify-center w-12 h-12 bg-yellow-100 rounded-full mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                </svg>
+              </div>
+              <h4 className="text-lg font-semibold text-gray-900 mb-2">
+                ¿Te ha gustado la prueba?
+              </h4>
+              <p className="text-gray-600 mb-4">
+                Usa este código para obtener un <span className="font-bold">{discountDescription}</span>:
+              </p>
+              <div className="flex w-full max-w-xs relative">
+                <div className="flex-grow py-3 px-4 bg-gray-100 rounded-l-lg border-2 border-r-0 border-gray-200 font-mono font-bold tracking-wide text-lg">
+                  {discountCode}
+                </div>
+                <button 
+                  onClick={copyDiscountCode}
+                  className="flex items-center justify-center px-4 bg-[#FF0169] hover:bg-[#D300C5] text-white rounded-r-lg transition-colors duration-200"
+                  title="Copiar código"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                  </svg>
+                </button>
+                
+                {/* Copy notification tooltip */}
+                {showCopyNotification && (
+                  <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-black text-white text-sm py-1 px-3 rounded shadow-lg animate-fade-in-out">
+                    ¡Código copiado!
+                  </div>
+                )}
+              </div>
+              <p className="text-sm text-gray-500 mt-3">
+                Válido por {validityDays} días en <a href={shopUrl} className="text-[#FF0169] hover:underline" target="_blank" rel="noopener noreferrer">goviral.es</a>
+              </p>
+            </div>
           </div>
         </div>
         
@@ -416,6 +547,7 @@ export default function InstagramReelTrial() {
           <div className="lg:w-7/12 bg-white rounded-2xl p-6 md:p-8 shadow-lg border border-gray-100">
             <div className="max-w-md mx-auto">
               {currentStep === "form" && renderFormStep()}
+              {currentStep === "verification" && renderVerificationStep()}
               {currentStep === "success" && renderSuccessStep()}
               
               <p className="mt-6 text-xs text-gray-500 text-center">

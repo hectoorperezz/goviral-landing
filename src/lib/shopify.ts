@@ -128,12 +128,6 @@ async function executeGraphQL(
   try {
     const shopifyGraphQLUrl = `https://${SHOPIFY_STORE_URL}/admin/api/${SHOPIFY_API_VERSION}/graphql.json`;
     
-    console.log('Executing GraphQL query:', {
-      url: shopifyGraphQLUrl,
-      apiVersion: SHOPIFY_API_VERSION,
-      query: query.substring(0, 50) + '...',
-    });
-    
     const response = await fetch(shopifyGraphQLUrl, {
       method: 'POST',
       headers: {
@@ -147,26 +141,24 @@ async function executeGraphQL(
       })
     });
     
-    console.log('GraphQL response status:', response.status);
-    
     const data = await response.text();
     let jsonData;
     
     try {
       jsonData = JSON.parse(data);
     } catch (e) {
-      console.error('Error parsing GraphQL response:', data);
+      console.error('[shopify] Error parsing GraphQL response:', data);
       throw new Error(`Error parsing GraphQL response: ${data}`);
     }
     
     if (jsonData.errors) {
-      console.error('GraphQL errors:', jsonData.errors);
+      console.error('[shopify] GraphQL errors:', jsonData.errors);
       throw new Error(`GraphQL errors: ${JSON.stringify(jsonData.errors)}`);
     }
     
     return jsonData.data;
   } catch (error) {
-    console.error('Error executing GraphQL query:', error);
+    console.error('[shopify] Error executing GraphQL query:', error);
     throw error;
   }
 }
@@ -185,13 +177,12 @@ export async function verifyShopifyConnection(
       };
     }
     
-    console.log('Shopify store verification successful:', data.shop.name);
     return {
       success: true,
       shop: data.shop
     };
   } catch (error) {
-    console.error('Error al verificar conexión con Shopify:', error);
+    console.error('[shopify] Error verificando conexión con Shopify:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Error desconocido'
@@ -225,7 +216,7 @@ export async function createCustomer(
     
     // Verificar si hay errores de usuario
     if (userErrors && userErrors.length > 0) {
-      console.error('Error al crear cliente en Shopify:', userErrors);
+      console.error('[shopify] Error al crear cliente:', userErrors);
       return {
         success: false,
         error: `Error al crear cliente: ${JSON.stringify(userErrors)}`
@@ -240,13 +231,12 @@ export async function createCustomer(
       };
     }
     
-    console.log('Shopify customer created successfully:', customer);
     return {
       success: true,
       customerId: customer.id
     };
   } catch (error) {
-    console.error('Error al crear cliente en Shopify:', error);
+    console.error('[shopify] Error al crear cliente:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Error desconocido'

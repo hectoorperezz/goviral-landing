@@ -241,242 +241,157 @@ We'll implement a file-based storage solution using a JSON file to track trial s
 - [ ] 9.5 Testing and Validation
 
 ## Project Status Board
-- [x] 0. Setup implementation environment
-  - [x] 0.1 Review project structure
-  - [x] 0.2 Create implementation plan
-- [x] 1. Create Instagram Reel Trial Component
-  - [x] 1.1 Create component file structure
-  - [x] 1.2 Implement form UI and state management
-  - [x] 1.3 Add form validation
-  - [x] 1.4 Add loading/success/error states
-  - [x] 1.5 Style component to match site design
-- [x] 2. Create API Helper Functions
-  - [x] 2.1 Create API helper file
-  - [x] 2.2 Implement JustAnotherPanel API function
-  - [x] 2.3 Add error handling
-- [x] 3. Create API Endpoint
-  - [x] 3.1 Create API route file
-  - [x] 3.2 Implement request validation
-  - [x] 3.3 Connect to JustAnotherPanel API
-  - [x] 3.4 Add error handling
-- [x] 4. Integrate Component into Landing Page
-  - [x] 4.1 Determine optimal placement
-  - [x] 4.2 Add component to page
-  - [x] 4.3 Add navigation link in header
-- [x] 5. Fix TypeScript Errors
-  - [x] 5.1 Install React type declarations
-  - [x] 5.2 Fix remaining TypeScript errors
-- [x] 6. Implement File-Based Anti-Abuse System
-  - [x] 6.1 Create file storage utility
-  - [x] 6.2 Implement trial record checking
-  - [x] 6.3 Update API endpoint for duplicate checking
-  - [x] 6.4 Update frontend for duplicate handling
-  - [x] 6.5 Create data directory and initial file
-  - [ ] 6.6 Test anti-abuse system
-- [x] 7. Implement Email Verification
-  - [x] 7.1 Update Data Storage
-    - [x] 7.1.1 Create pending verifications data structure
-    - [x] 7.1.2 Implement verification storage functions
-    - [x] 7.1.3 Add verification code utilities
-    - [x] 7.1.4 Add expiration handling
-  - [x] 7.2 Create Email Sending Functionality
-    - [x] 7.2.1 Select and integrate email service (Nodemailer)
-    - [x] 7.2.2 Create email templates
-    - [x] 7.2.3 Implement sending functions
-  - [x] 7.3 Update API Endpoints
-    - [x] 7.3.1 Create request endpoint
-    - [x] 7.3.2 Create verification endpoint
-    - [x] 7.3.3 Update trial processing logic
-  - [x] 7.4 Update Frontend Components
-    - [x] 7.4.1 Add verification step to UI flow
-    - [x] 7.4.2 Create verification code input form
-    - [x] 7.4.3 Add resend functionality
-  - [x] 7.5 Add Analytics Tracking
-  - [ ] 7.6 Testing
-- [x] 8. Implement Shopify Customer Creation
-  - [x] 8.1 Set Up Shopify API Access
-  - [x] 8.2 Implement Customer Creation Functions
-  - [x] 8.3 Create Server-Side API Endpoint
-  - [x] 8.4 Integrate with Trial Process
-  - [x] 8.5 Fix Shopify API Connection Issues
-  - [ ] 8.6 Testing and Validation
-- [ ] 9. Final Testing and Deployment
-  - [ ] 9.1 Comprehensive testing
-  - [ ] 9.2 Deploy changes
+- [x] Phase 1: Vercel Blob Setup and Migration
+  - [x] Task 1: Configure Vercel Blob
+  - [x] Task 2: Implement storage utilities
+  - [x] Task 3: Design key schema
+  - [x] Task 4: Migration script
+  - [x] Task 5: Update logic for anti-abuse & verification
+- [x] Phase 2: API Layer Refactor
+  - [x] Task 6: Refactor API routes
+  - [x] Task 7: Error handling & logging
+- [x] Phase 3: Shopify Integration Validation
+  - [x] Task 8: Create test endpoint for Shopify integration
+  - [x] Task 9: Validate customer creation
+- [x] Phase 4: Development Fallback Implementation
+  - [x] Task 10: Implement fallback mechanism for local development
+  - [x] Task 11: Test fallback functionality
+- [ ] Phase 5: Deployment & Monitoring
+  - [ ] Task 12: Deploy to Vercel
+  - [ ] Task 13: Set up monitoring
 
 ## Executor's Feedback or Assistance Requests
-I've fixed the Shopify customer creation functionality by addressing the following issues:
+I've completed the implementation of a fallback mechanism for Vercel Blob storage in development mode. Here's what I've done:
 
-1. **Fixed API URL Format**:
-   - Updated the Shopify store URL from `goviral-4810.account.myshopify.com` to `goviral-4810.myshopify.com`
-   - Changed the API version from `2025-04` (which doesn't exist yet) to `2023-10` (a stable version)
+1. **Fallback Mechanism**: 
+   - Added a complete fallback system that uses file-based storage when Blob storage fails
+   - Created a data directory with JSON files for trials and verifications
+   - Implemented file-based versions of all storage functions
 
-2. **Improved API Integration**:
-   - Removed direct GraphQL API calls in the verification endpoint
-   - Now using the utility functions from shopify.ts consistently across all endpoints
-   - Added proper error handling and logging
+2. **Development Experience**:
+   - The system now works seamlessly in both development and production environments
+   - In development, it automatically falls back to file storage if Blob operations fail
+   - In production, it will use Vercel Blob exclusively
 
-3. **Added Diagnostic Tools**:
-   - Created a test endpoint at `/api/test-shopify` to verify the Shopify connection
-   - Added detailed diagnostic information to help troubleshoot any remaining issues
+3. **Error Handling**:
+   - Added comprehensive error handling throughout the storage layer
+   - Added detailed logging with consistent prefixes for easier debugging
+   - Gracefully handles Shopify customer creation errors
 
-4. **Fixed TypeScript Errors**:
-   - Added type declarations for global objects
-   - Created missing components to resolve import errors
+4. **Shopify Integration**:
+   - Successfully validated the Shopify integration
+   - Added special handling for duplicate customer emails
 
-### Next Steps for Testing
+The implementation is now complete and ready for deployment. Here are the final steps needed:
 
-1. **Test the Shopify Connection**:
-   - Access the `/api/test-shopify` endpoint to verify the connection is working
-   - Check the console logs for detailed information about the API response
+1. **Deployment**:
+   - Add the BLOB_READ_WRITE_TOKEN to Vercel environment variables
+   - Add the SHOPIFY_ADMIN_API_TOKEN to Vercel environment variables
+   - Deploy the application to Vercel
 
-2. **Test the Complete User Flow**:
-   - Submit a trial request with a valid email
-   - Complete the email verification process
-   - Verify that a customer record is created in Shopify
+2. **Testing**:
+   - Test the complete flow in production
+   - Verify that Blob storage works correctly in the Vercel environment
+   - Test the Shopify customer creation in production
 
-3. **Error Handling Testing**:
-   - Test with an email that already exists in Shopify
-   - Test with invalid email formats
-   - Verify that the trial process still completes even if Shopify customer creation fails
-
-### Remaining Issues to Address
-
-1. **Move API Tokens to Environment Variables**:
-   - The Shopify API token is currently hardcoded in the source files
-   - Should be moved to environment variables for better security
-
-2. **Implement Retry Logic**:
-   - Add retry logic for Shopify API calls in case of temporary failures
-
-3. **Add Comprehensive Logging**:
-   - Implement structured logging for better debugging and monitoring
-
-## Implementation Summary
-
-### What's Been Implemented
-1. **Instagram Reel Trial Component**: A responsive form component that allows users to submit their name, email, and Instagram reel URL to receive 500 free views.
-2. **API Integration**: Integration with JustAnotherPanel API to send 500 views to the submitted Instagram reel.
-3. **Form Validation**: Client-side validation for all form fields to ensure data quality.
-4. **Analytics Tracking**: Tracking of form submissions and outcomes for analytics purposes.
-5. **User Feedback**: Clear success and error messages to provide feedback to users.
-6. **Navigation**: Added a new navigation link in the header for easy access to the trial section.
-7. **Anti-Abuse System**: Implemented a file-based system to track trial usage and prevent duplicate submissions from the same email or for the same Instagram reel.
-8. **Email Verification**: Added a two-step verification process to ensure users provide valid email addresses before receiving the free trial.
-9. **Shopify Customer Creation**: Added functionality to create customer records in Shopify when users complete the trial verification using the GraphQL Admin API.
-
-### Next Steps
-1. **Test Email Verification System**: Test the complete verification flow to ensure it works correctly.
-2. **Test Shopify Customer Creation**: Verify that customers are properly created in Shopify after completing the verification process.
-3. **Comprehensive Testing**: Test all functionality including form validation, API integration, and analytics tracking.
-4. **Deployment**: Deploy the changes to the production environment.
+3. **Monitoring**:
+   - Set up error monitoring for API failures
+   - Monitor Blob storage usage and quotas
+   - Set up alerts for critical failures
 
 ## Lessons
-- Include info useful for debugging in the program output
-- Read the file before trying to edit it
-- Run npm audit if vulnerabilities appear in the terminal
-- Always ask before using the -force git command
-- When extending Window interface for global objects, use the global declaration approach
-- Install type declarations for third-party libraries to fix TypeScript errors
-- Consider file-based storage for simple persistence when a database is not available
-- Store API tokens securely in server-side code, never expose them in client-side code or commit them to version control
-- When working with Shopify APIs, use the GraphQL Admin API instead of the REST API which is being deprecated
-- Always include proper version headers when making API requests to Shopify
-- Handle API errors gracefully to ensure a good user experience even when third-party services fail
-- Use `emailMarketingConsent` object instead of the deprecated `acceptsMarketing` field in Shopify customer creation (removed in API 2024-01)
-- Always pin the API version with `X-Shopify-API-Version` header to ensure consistent behavior across API updates 
-- Implement proper logging for debugging API responses, especially for GraphQL which can have complex error structures
-- Ensure customer data is properly formatted before sending to Shopify (e.g., splitting full name into first and last name)
-- Use correct Shopify store URL format (goviral-4810.myshopify.com, not goviral-4810.account.myshopify.com)
-- Use a stable and existing API version (e.g., 2023-10) rather than a future version (2025-04)
+- Vercel Blob requires proper authentication even in development environments
+- Implementing a fallback mechanism is crucial for smooth development experience
+- Handling duplicate customer emails in Shopify requires specific error checking
+- Consistent logging patterns with prefixes (e.g., `[service-name]`) make debugging easier
+- Having a robust error handling strategy is essential for serverless applications
 
-## UI Improvements Plan for Instagram Trial Feature
+# Instagram Reels Trial with Discount Code Implementation
 
-### Background and Motivation
-The current Instagram Reel Trial feature is functional but could benefit from visual enhancements to make it more engaging, recognizable, and aligned with the Instagram brand while maintaining GoViral's design language. Additionally, the navigation link in the header needs more prominence to increase user engagement with this feature.
+## Background and Motivation
 
-### Key Challenges and Analysis
-1. **Brand Recognition**: Users should immediately recognize that this feature is related to Instagram without confusing it with an official Instagram feature.
-2. **Visual Appeal**: The current UI is functional but could be more visually engaging to attract users.
-3. **User Flow Clarity**: The verification process should be visually intuitive and guide users through each step.
-4. **Call to Action**: The header navigation link should stand out more to drive traffic to the trial feature.
+We've developed a Next.js application for GoViral that allows users to trial Instagram reel views. The system includes email verification and now features a discount code (PRUEBAREEL50) for conversions. We need to prepare this code for pushing to the main remote repository.
 
-### High-level Task Breakdown
-- [x] 1. Header Navigation Enhancement
-  - [x] 1.1 Make the "Prueba Gratis" link more prominent with Instagram-inspired gradient colors
-  - [x] 1.2 Add an icon to the link to increase visibility
-  - [x] 1.3 Implement hover effects for better interactivity
-- [x] 2. Instagram Trial Section Improvements
-  - [x] 2.1 Add Instagram branding elements (logo, colors)
-  - [x] 2.2 Implement a two-column layout for better content organization
-  - [x] 2.3 Add visual feature highlights with icons
-  - [x] 2.4 Improve typography and spacing
-- [x] 3. Form UI Enhancements
-  - [x] 3.1 Add field icons for better visual guidance
-  - [x] 3.2 Implement Instagram-inspired gradient buttons
-  - [x] 3.3 Improve form validation visual feedback
-- [x] 4. Verification Process Improvements
-  - [x] 4.1 Create a digit-by-digit verification code input for better UX
-  - [x] 4.2 Add clearer instructions and visual cues
-  - [x] 4.3 Enhance the verification success state with animations
-- [x] 5. Success State Enhancement
-  - [x] 5.1 Add celebration animation
-  - [x] 5.2 Improve visual hierarchy of information
-  - [x] 5.3 Add call-to-action for additional services
+## Key Challenges and Analysis
 
-### Project Status Board
-- [x] 0. Setup implementation environment
-  - [x] 0.1 Review project structure
-  - [x] 0.2 Create implementation plan
-- [x] 1. Create Instagram Reel Trial Component
-  - [x] 1.1 Create component file structure
-  - [x] 1.2 Implement form UI and state management
-  - [x] 1.3 Add form validation
-  - [x] 1.4 Add loading/success/error states
-  - [x] 1.5 Style component to match site design
-- [x] 2. Create API Helper Functions
-  - [x] 2.1 Create API helper file
-  - [x] 2.2 Implement JustAnotherPanel API function
-  - [x] 2.3 Add error handling
-- [x] 3. Create API Endpoint
-  - [x] 3.1 Create API route file
-  - [x] 3.2 Implement request validation
-  - [x] 3.3 Connect to JustAnotherPanel API
-  - [x] 3.4 Add error handling
-- [x] 4. Integrate Component into Landing Page
-  - [x] 4.1 Add component to page
-  - [x] 4.2 Style section to match site design
-  - [x] 4.3 Add navigation link to header
-- [x] 5. Implement Email Verification
-  - [x] 5.1 Create verification component
-  - [x] 5.2 Implement verification API endpoint
-  - [x] 5.3 Add verification logic to component
-  - [x] 5.4 Style verification UI
-- [x] 6. Create Shopify Integration
-  - [x] 6.1 Create Shopify API helper functions
-  - [x] 6.2 Implement customer creation mutation
-  - [x] 6.3 Connect verification endpoint to Shopify API
-  - [x] 6.4 Add error handling and logging
-- [x] 7. UI Improvements
-  - [x] 7.1 Enhance header navigation with Instagram-inspired styling
-  - [x] 7.2 Add Instagram branding elements to the trial section
-  - [x] 7.3 Implement two-column layout for better content organization
-  - [x] 7.4 Add form field icons and improve button styling
-  - [x] 7.5 Create digit-by-digit verification code input
-  - [x] 7.6 Enhance success state with animations and better visual hierarchy
+1. **Code organization**: We've made significant changes including adding the Vercel Blob Storage, email verification system, and discount code feature.
+2. **Environment variables**: The application uses several environment variables for SMTP configuration, blob storage, etc.
+3. **Data migration**: Moving from JSON file storage to Vercel Blob Storage.
+4. **New dependencies**: Added packages like nodemailer, @vercel/blob, etc.
+5. **Deployment considerations**: Ensuring the app works correctly in production environment.
 
-### Executor's Feedback or Assistance Requests
-All UI improvements have been successfully implemented. The Instagram trial section now has:
-- A prominent header navigation link with Instagram-inspired gradient colors
-- Instagram branding elements including the logo and gradient colors
-- A two-column layout with feature highlights and icons
-- Enhanced form fields with icons and better styling
-- A digit-by-digit verification code input for better UX
-- An improved success state with animations and better visual hierarchy
+## High-level Task Breakdown
 
-### Lessons
-- When implementing UI improvements, focus on both aesthetics and usability
-- Use subtle animations to make the UI feel more responsive and engaging
-- Maintain brand consistency while incorporating elements from third-party services (like Instagram)
-- Digit-by-digit verification inputs provide better UX for verification codes
-- Using SVG icons with gradients can create a more modern and polished look 
+1. **Code cleanup and organization**
+   - Ensure all debugging console.logs are appropriate for production
+   - Remove any unused code or test files
+   - Success criteria: Code is clean and follows best practices
+
+2. **Documentation update**
+   - Update README.md with project overview, features, and setup instructions
+   - Create/update DEPLOYMENT.md with detailed deployment instructions
+   - Include environment variable requirements
+   - Success criteria: Comprehensive documentation for developers and deployment team
+
+3. **Environment variable management**
+   - Document all required environment variables
+   - Provide example values where appropriate
+   - Success criteria: Complete list of environment variables with descriptions
+
+4. **Testing**
+   - Test the full user journey (trial request, email verification, success page with discount code)
+   - Test error handling and edge cases
+   - Success criteria: All features work as expected, errors are handled gracefully
+
+5. **Git preparation**
+   - Stage all necessary files
+   - Create a meaningful commit message
+   - Push to the remote repository
+   - Success criteria: Clean commit history with a descriptive message
+
+6. **Deployment verification plan**
+   - Define steps to verify the deployment once pushed
+   - Prepare monitoring and feedback mechanisms
+   - Success criteria: Clear plan for verifying production deployment
+
+## Project Status Board
+
+### To Do
+- [ ] Prepare final documentation (README.md, DEPLOYMENT.md)
+- [ ] Clean up console.logs and any temporary/debug code
+- [ ] Test email verification with real email accounts
+- [ ] Test discount code visibility in emails and success UI
+- [ ] Document environment variables needed for production
+- [ ] Stage and commit all necessary files
+- [ ] Push to main remote repository
+
+### In Progress
+
+### Done
+- [x] Implement Vercel Blob Storage
+- [x] Add email verification system
+- [x] Create discount code UI in success screen
+- [x] Add discount code to verification emails
+- [x] Integrate with Shopify for customer creation
+- [x] Add anti-abuse measures
+
+## Executor's Feedback or Assistance Requests
+
+## Lessons
+
+- Always ensure environment variables are documented clearly
+- Including detailed error logs in production output helps with debugging
+- For email systems, always test with real email accounts before deployment
+- Anti-abuse measures are essential for public-facing forms
+- Backup mechanisms (like direct-process) are important for user experience
+
+## Current Status / Progress Tracking
+
+We have successfully implemented:
+1. A migration from JSON file storage to Vercel Blob Storage
+2. Email verification for trial requests
+3. Discount code (PRUEBAREEL50) in both the verification email and success UI
+4. Integration with Shopify for customer creation
+5. Anti-abuse measures to prevent duplicate trial requests
+
+Next, we need to prepare the code for pushing to the main remote repository by cleaning up, documenting, and testing thoroughly. 
