@@ -33,10 +33,7 @@ export default function RootLayout({
     <html lang="es">
       <head>
         {/* Meta de verificación de Google */}
-        <meta
-          name="google-site-verification"
-          content="wj6ck1acMc3rlUupdXEucQSQ6gMRotyLWkeuvSC_onA"
-        />
+        <meta name="google-site-verification" content="KhQY22rQ6dweu0hMAYbPal9NOGccSJ3lqDCGoMRpcIc" />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white`}>
         {children}
