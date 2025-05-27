@@ -44,6 +44,8 @@ export default function RootLayout({
           src="https://www.googletagmanager.com/gtag/js?id=G-715BKDY6ZV"
           strategy="afterInteractive"
         />
+        
+        
         <Script
           id="gtag-init"
           strategy="afterInteractive"
@@ -56,11 +58,14 @@ export default function RootLayout({
               // 1) Configuración GA4
               gtag('config', 'G-715BKDY6ZV');
 
-              // 2) Configuración Google Ads
+              // 2) Configuración Google Ads (existing)
               gtag('config', 'AW-16805560957', {
                 allow_enhanced_conversions: true,
                 linker: { domains: ['goviral.es'] }
               });
+
+              // 3) Configuración Google Ads (new)
+              gtag('config', 'AW-17121907498');
             `,
           }}
         />
