@@ -4,36 +4,9 @@ import React, { useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import InstagramReelTrial from "@/components/InstagramReelTrial";
-
-// Helper para disparar eventos gtag
-const trackClick = (action: string) => {
-  if (typeof window !== "undefined" && window.gtag) {
-    const eventValues: { [key: string]: number } = {
-      click_ver_mas_header: 1,
-      click_ver_planes_hero: 2,
-      click_contactar_hero: 1,
-      click_collections_instagram: 2,
-      click_collections_tiktok: 2,
-      click_collections_youtube: 1,
-      click_collections_spotify: 1,
-      click_collections_instagram_footer: 2,
-      click_collections_tiktok_footer: 2,
-      click_collections_youtube_footer: 1,
-      click_plan_starter_instagram: 3,
-      click_plan_influencer_instagram: 4,
-      click_plan_enterprise_instagram: 5,
-      click_comenzar_ahora: 2,
-      click_contacto_footer: 1,
-      click_collections_spotify_footer: 1
-    };
-
-    window.gtag("event", action, {
-      event_category: "outbound",
-      event_label: action,
-      value: eventValues[action] || 1,
-    });
-  }
-};
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import { trackClick } from "@/lib/analytics";
 
 export default function Home() {
 
@@ -62,59 +35,10 @@ export default function Home() {
   
   return (
     <main className="min-h-screen flex flex-col bg-[#fbfbfd]">
-      {/* Header - Apple Style */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200/30 py-4">
-        <div className="container mx-auto px-4 md:px-6 flex items-center justify-between">
-          <div className="flex items-center">
-            <Image
-              src="/logo.png"
-              alt="GoViral Logo"
-              width={80}
-              height={80}
-              className="rounded-lg"
-            />
-          </div>
-          <nav className="hidden md:flex items-center space-x-10">
-            <Link
-              href="#inicio"
-              className="text-gray-800 hover:text-[rgb(214,77,173)] font-medium text-sm tracking-tight transition-colors duration-200"
-            >
-              Inicio
-            </Link>
-            <Link
-              href="#servicios"
-              className="text-gray-800 hover:text-[rgb(214,77,173)] font-medium text-sm tracking-tight transition-colors duration-200"
-            >
-              Servicios
-            </Link>
-            <Link
-              href="#testimonios"
-              className="text-gray-800 hover:text-[rgb(214,77,173)] font-medium text-sm tracking-tight transition-colors duration-200"
-            >
-              Testimonios
-            </Link>
-            <Link
-              href="#faq"
-              className="text-gray-800 hover:text-[rgb(214,77,173)] font-medium text-sm tracking-tight transition-colors duration-200"
-            >
-              FAQ
-            </Link>
-          </nav>
+      <Header />
 
-          <div className="flex items-center">
-            <Link
-              href="https://goviral.es/collections"
-              onClick={() => trackClick("click_ver_mas_header")}
-              className="bg-[rgb(214,77,173)] text-white px-6 py-2.5 rounded-full font-medium hover:bg-[rgb(194,57,153)] transition-all duration-200"
-            >
-              Ver más
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      {/* Hero Section - Apple Style */}
-      <section
+    {/* Hero Section - Apple Style */}
+    <section
         id="inicio"
         className="relative py-20 md:py-28 lg:py-36 overflow-hidden"
       >
@@ -176,29 +100,38 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Features Section - Apple Style */}
-      <section className="py-24 md:py-32 bg-white">
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="text-center max-w-2xl mx-auto mb-20">
-            <span className="inline-block px-4 py-1.5 bg-[#f2f2f7] text-[rgb(214,77,173)] font-medium text-xs tracking-wide rounded-full mb-6">
+      {/* Features Section - Apple Style with Mobile Optimization */}
+      <section className="py-16 sm:py-20 md:py-24 lg:py-32 bg-white relative overflow-hidden">
+        {/* Subtle Background Elements - Hidden on mobile */}
+        <div className="hidden md:block absolute top-40 left-10 w-60 h-60 bg-gradient-to-r from-[#FF7A00] to-[#FF0169] opacity-1 rounded-full blur-3xl"></div>
+        <div className="hidden md:block absolute bottom-40 right-10 w-72 h-72 bg-gradient-to-r from-[#FF0169] to-[#D300C5] opacity-1 rounded-full blur-3xl"></div>
+        
+        <div className="container mx-auto px-4 sm:px-6 relative z-10">
+          <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-16 md:mb-20">
+            <span className="inline-block px-3 sm:px-4 py-1.5 bg-[#f2f2f7] text-[rgb(214,77,173)] font-medium text-xs tracking-wide rounded-full mb-6 transition-all duration-300 hover:scale-105">
               Por qué elegirnos
             </span>
-            <h2 className="text-3xl md:text-4xl font-semibold mb-6 text-gray-900 tracking-tight">
-              Somos el mejor sitio
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold mb-4 sm:mb-6 text-gray-900 tracking-tight px-4">
+              Somos el{" "}
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-[rgb(214,77,173)] to-[rgb(244,102,110)]">
+                mejor sitio
+              </span>
             </h2>
-            <p className="text-gray-500 text-lg leading-relaxed font-light">
+            <p className="text-gray-500 text-base sm:text-lg leading-relaxed font-light px-4">
               Ofrecemos servicios de calidad con entrega inmediata y garantía
               total
             </p>
+            <div className="h-1 w-16 sm:w-20 bg-gradient-to-r from-[rgb(214,77,173)] to-[rgb(244,102,110)] rounded-full mt-6 sm:mt-8 mx-auto"></div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
             {/* Feature 1 */}
-            <div className="bg-white p-8 rounded-3xl hover:translate-y-[-8px] transition-all duration-300 flex flex-col items-center text-center shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)]">
-              <div className="w-14 h-14 flex items-center justify-center rounded-full bg-[rgb(214,77,173)] text-white mb-6">
+            <div className="group bg-gradient-to-b from-white to-[#f8f8fa] p-6 sm:p-8 rounded-2xl sm:rounded-3xl hover:translate-y-[-4px] sm:hover:translate-y-[-8px] transition-all duration-300 flex flex-col items-center text-center shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)] border border-gray-100">
+              <div className="relative mb-6">
+                <div className="w-12 sm:w-14 h-12 sm:h-14 flex items-center justify-center rounded-full bg-gradient-to-r from-[rgb(214,77,173)] to-[rgb(244,102,110)] text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
+                    className="h-5 w-5 sm:h-6 sm:w-6"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -211,21 +144,28 @@ export default function Home() {
                   />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold mb-3 text-gray-900">
+                <div className="absolute -top-1 sm:-top-2 -right-1 sm:-right-2 w-4 sm:w-5 h-4 sm:h-5 bg-green-500 rounded-full flex items-center justify-center">
+                  <svg className="w-2 sm:w-2.5 h-2 sm:h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              </div>
+              <h3 className="text-base sm:text-lg font-semibold mb-3 text-gray-900 px-2">
                 Entrega Inmediata
               </h3>
-              <p className="text-gray-500 leading-relaxed text-sm">
+              <p className="text-gray-500 leading-relaxed text-sm px-2">
                 Todos los pedidos se procesan e inician dentro de los 60
                 segundos posteriores al pago.
               </p>
             </div>
 
             {/* Feature 2 */}
-            <div className="bg-white p-8 rounded-3xl hover:translate-y-[-8px] transition-all duration-300 flex flex-col items-center text-center shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)]">
-              <div className="w-14 h-14 flex items-center justify-center rounded-full bg-[rgb(214,77,173)] text-white mb-6">
+            <div className="group bg-gradient-to-b from-white to-[#f8f8fa] p-6 sm:p-8 rounded-2xl sm:rounded-3xl hover:translate-y-[-4px] sm:hover:translate-y-[-8px] transition-all duration-300 flex flex-col items-center text-center shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)] border border-gray-100">
+              <div className="relative mb-6">
+                <div className="w-12 sm:w-14 h-12 sm:h-14 flex items-center justify-center rounded-full bg-gradient-to-r from-[rgb(214,77,173)] to-[rgb(244,102,110)] text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
+                    className="h-5 w-5 sm:h-6 sm:w-6"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -238,21 +178,28 @@ export default function Home() {
                   />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold mb-3 text-gray-900">
+                <div className="absolute -top-1 sm:-top-2 -right-1 sm:-right-2 w-4 sm:w-5 h-4 sm:h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                  <svg className="w-2 sm:w-2.5 h-2 sm:h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              </div>
+              <h3 className="text-base sm:text-lg font-semibold mb-3 text-gray-900 px-2">
                 100% Garantizado
               </h3>
-              <p className="text-gray-500 leading-relaxed text-sm">
+              <p className="text-gray-500 leading-relaxed text-sm px-2">
                 Todos nuestros servicios cuentan con garantía de un mes. Si
                 experimenta alguna disminución, se lo compensaremos.
               </p>
             </div>
 
             {/* Feature 3 */}
-            <div className="bg-white p-8 rounded-3xl hover:translate-y-[-8px] transition-all duration-300 flex flex-col items-center text-center shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)]">
-              <div className="w-14 h-14 flex items-center justify-center rounded-full bg-[rgb(214,77,173)] text-white mb-6">
+            <div className="group bg-gradient-to-b from-white to-[#f8f8fa] p-6 sm:p-8 rounded-2xl sm:rounded-3xl hover:translate-y-[-4px] sm:hover:translate-y-[-8px] transition-all duration-300 flex flex-col items-center text-center shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)] border border-gray-100">
+              <div className="relative mb-6">
+                <div className="w-12 sm:w-14 h-12 sm:h-14 flex items-center justify-center rounded-full bg-gradient-to-r from-[rgb(214,77,173)] to-[rgb(244,102,110)] text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
+                    className="h-5 w-5 sm:h-6 sm:w-6"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -265,21 +212,28 @@ export default function Home() {
                   />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold mb-3 text-gray-900">
+                <div className="absolute -top-1 sm:-top-2 -right-1 sm:-right-2 w-4 sm:w-5 h-4 sm:h-5 bg-purple-500 rounded-full flex items-center justify-center">
+                  <svg className="w-2 sm:w-2.5 h-2 sm:h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              </div>
+              <h3 className="text-base sm:text-lg font-semibold mb-3 text-gray-900 px-2">
                 Compra Segura
               </h3>
-              <p className="text-gray-500 leading-relaxed text-sm">
+              <p className="text-gray-500 leading-relaxed text-sm px-2">
                 Nos comprometemos a nunca solicitar la contraseña de su cuenta.
                 Su privacidad y seguridad son nuestra principal preocupación.
               </p>
             </div>
 
             {/* Feature 4 */}
-            <div className="bg-white p-8 rounded-3xl hover:translate-y-[-8px] transition-all duration-300 flex flex-col items-center text-center shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)]">
-              <div className="w-14 h-14 flex items-center justify-center rounded-full bg-[rgb(214,77,173)] text-white mb-6">
+            <div className="group bg-gradient-to-b from-white to-[#f8f8fa] p-6 sm:p-8 rounded-2xl sm:rounded-3xl hover:translate-y-[-4px] sm:hover:translate-y-[-8px] transition-all duration-300 flex flex-col items-center text-center shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)] border border-gray-100">
+              <div className="relative mb-6">
+                <div className="w-12 sm:w-14 h-12 sm:h-14 flex items-center justify-center rounded-full bg-gradient-to-r from-[rgb(214,77,173)] to-[rgb(244,102,110)] text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
+                    className="h-5 w-5 sm:h-6 sm:w-6"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -292,10 +246,16 @@ export default function Home() {
                   />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold mb-3 text-gray-900">
+                <div className="absolute -top-1 sm:-top-2 -right-1 sm:-right-2 w-4 sm:w-5 h-4 sm:h-5 bg-yellow-500 rounded-full flex items-center justify-center">
+                  <svg className="w-2 sm:w-2.5 h-2 sm:h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                </div>
+              </div>
+              <h3 className="text-base sm:text-lg font-semibold mb-3 text-gray-900 px-2">
                 Calidad superior
               </h3>
-              <p className="text-gray-500 leading-relaxed text-sm">
+              <p className="text-gray-500 leading-relaxed text-sm px-2">
                 Ofrecemos servicios de la más alta calidad, sin comprometer
                 nuestros precios, que son los más competitivos del mercado.
               </p>
@@ -304,22 +264,22 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Instagram Reel Trial Section */}
-      <section id="prueba-gratis" className="py-24 md:py-32 bg-gradient-to-b from-[#f5f5f7] to-white relative overflow-hidden">
-        {/* Instagram-inspired background elements */}
-        <div className="absolute top-20 left-10 w-64 h-64 bg-gradient-to-r from-[#FF7A00] to-[#FF0169] opacity-5 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-r from-[#FF0169] to-[#D300C5] opacity-5 rounded-full blur-3xl"></div>
+      {/* Instagram Reel Trial Section with Mobile Optimization */}
+      <section id="prueba-gratis" className="py-16 sm:py-20 md:py-24 lg:py-32 bg-gradient-to-b from-[#f5f5f7] to-white relative overflow-hidden">
+        {/* Instagram-inspired background elements - Hidden on mobile for better readability */}
+        <div className="hidden sm:block absolute top-20 left-10 w-48 md:w-64 h-48 md:h-64 bg-gradient-to-r from-[#FF7A00] to-[#FF0169] opacity-2 md:opacity-5 rounded-full blur-3xl"></div>
+        <div className="hidden sm:block absolute bottom-20 right-10 w-64 md:w-96 h-64 md:h-96 bg-gradient-to-r from-[#FF0169] to-[#D300C5] opacity-2 md:opacity-5 rounded-full blur-3xl"></div>
         
-        <div className="container mx-auto px-4 md:px-6 relative z-10">
-          <div className="flex justify-center mb-8">
-            <div className="bg-gradient-to-r from-[#FF7A00] via-[#FF0169] to-[#D300C5] p-1 rounded-2xl shadow-lg shadow-pink-500/20 transform hover:rotate-6 transition-transform duration-300">
-              <div className="bg-white p-3 rounded-xl">
+        <div className="container mx-auto px-4 sm:px-6 relative z-10">
+          <div className="flex justify-center mb-6 sm:mb-8">
+            <div className="bg-gradient-to-r from-[#FF7A00] via-[#FF0169] to-[#D300C5] p-1 rounded-xl sm:rounded-2xl shadow-lg shadow-pink-500/20 transform hover:rotate-6 transition-transform duration-300">
+              <div className="bg-white p-2 sm:p-3 rounded-lg sm:rounded-xl">
                 <Image
                   src="/instagram.svg"
                   alt="Instagram"
-                  width={48}
-                  height={48}
-                  className="rounded-lg"
+                  width={40}
+                  height={40}
+                  className="sm:w-12 sm:h-12 rounded-lg"
                 />
               </div>
             </div>
@@ -329,121 +289,145 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Platforms Section - Apple Style */}
-      <section id="servicios" className="py-24 md:py-32 bg-[#f5f5f7]">
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="text-center max-w-2xl mx-auto mb-20">
-            <span className="inline-block px-4 py-1.5 bg-[#f2f2f7] text-[rgb(214,77,173)] font-medium text-xs tracking-wide rounded-full mb-6">
+      {/* Platforms Section - Apple Style with Mobile Optimization */}
+      <section id="servicios" className="py-16 sm:py-20 md:py-24 lg:py-32 bg-[#f5f5f7] relative overflow-hidden">
+        {/* Background Elements - Hidden on mobile */}
+        <div className="hidden md:block absolute top-40 left-0 w-64 h-64 bg-gradient-to-r from-[#FF7A00] to-[#FF0169] opacity-1 rounded-full blur-3xl"></div>
+        <div className="hidden md:block absolute bottom-40 right-0 w-80 h-80 bg-gradient-to-r from-[#FF0169] to-[#D300C5] opacity-1 rounded-full blur-3xl"></div>
+        
+        <div className="container mx-auto px-4 sm:px-6 relative z-10">
+          <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-16 md:mb-20">
+            <span className="inline-block px-3 sm:px-4 py-1.5 bg-[#f2f2f7] text-[rgb(214,77,173)] font-medium text-xs tracking-wide rounded-full mb-6 transition-all duration-300 hover:scale-105">
               Servicios
             </span>
-            <h2 className="text-3xl md:text-4xl font-semibold mb-6 text-gray-900 tracking-tight">
-              Nuestras Plataformas
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold mb-4 sm:mb-6 text-gray-900 tracking-tight px-4">
+              Nuestras{" "}
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-[rgb(214,77,173)] to-[rgb(244,102,110)]">
+                Plataformas
+              </span>
             </h2>
-            <p className="text-gray-500 text-lg leading-relaxed font-light">
+            <p className="text-gray-500 text-base sm:text-lg leading-relaxed font-light px-4">
               Impulsa tu presencia digital en las principales redes sociales
             </p>
+            <div className="h-1 w-16 sm:w-20 bg-gradient-to-r from-[rgb(214,77,173)] to-[rgb(244,102,110)] rounded-full mt-6 sm:mt-8 mx-auto"></div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
             {/* Instagram */}
-            <div className="bg-white rounded-3xl p-8 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)] hover:translate-y-[-8px] transition-all duration-300 flex flex-col items-center h-full">
-              <div className="mb-8 transform hover:scale-105 transition-transform duration-300">
+            <div className="group bg-gradient-to-b from-white to-[#f8f8fa] rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)] hover:translate-y-[-4px] sm:hover:translate-y-[-8px] transition-all duration-300 flex flex-col items-center h-full border border-gray-100">
+              <div className="mb-6 sm:mb-8 transform hover:scale-105 transition-transform duration-300 relative">
+                <div className="bg-gradient-to-r from-[#FF7A00] via-[#FF0169] to-[#D300C5] p-1 rounded-xl sm:rounded-2xl">
+                  <div className="bg-white p-2 sm:p-3 rounded-lg sm:rounded-xl">
                 <Image
                   src="/instagram.png"
                   alt="Instagram"
-                  width={64}
-                  height={64}
-                  className="rounded-2xl"
+                      width={48}
+                      height={48}
+                      className="sm:w-16 sm:h-16 rounded-lg sm:rounded-xl"
                 />
               </div>
-              <h3 className="text-lg font-semibold mb-3 text-gray-900">
+                </div>
+              </div>
+              <h3 className="text-base sm:text-lg font-semibold mb-3 text-gray-900 text-center px-2">
                 Instagram
               </h3>
-              <p className="text-gray-500 text-center mb-8 leading-relaxed text-sm">
+              <p className="text-gray-500 text-center mb-6 sm:mb-8 leading-relaxed text-sm px-2">
                 Aumenta tus seguidores, likes y comentarios en Instagram.
               </p>
               <Link
                 href="https://goviral.es/collections/instagram"
                 onClick={() => trackClick("click_collections_instagram")}
-                className="mt-auto text-center w-full bg-[rgb(214,77,173)] text-white px-5 py-3 rounded-full font-medium hover:bg-[rgb(194,57,153)] transition-all duration-300"
+                className="mt-auto text-center w-full bg-gradient-to-r from-[rgb(214,77,173)] to-[rgb(244,102,110)] text-white px-4 sm:px-5 py-2.5 sm:py-3 rounded-full font-medium text-sm sm:text-base hover:shadow-lg transition-all duration-300 transform hover:scale-105"
               >
                 Ver Servicios
               </Link>
             </div>
 
             {/* TikTok */}
-            <div className="bg-white rounded-3xl p-8 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)] hover:translate-y-[-8px] transition-all duration-300 flex flex-col items-center h-full">
-              <div className="mb-8 transform hover:scale-105 transition-transform duration-300">
+            <div className="group bg-gradient-to-b from-white to-[#f8f8fa] rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)] hover:translate-y-[-4px] sm:hover:translate-y-[-8px] transition-all duration-300 flex flex-col items-center h-full border border-gray-100">
+              <div className="mb-6 sm:mb-8 transform hover:scale-105 transition-transform duration-300 relative">
+                <div className="bg-black p-1 rounded-xl sm:rounded-2xl">
+                  <div className="bg-white p-2 sm:p-3 rounded-lg sm:rounded-xl">
                 <Image
                   src="/tiktok.png"
                   alt="TikTok"
-                  width={64}
-                  height={64}
-                  className="rounded-2xl"
+                      width={48}
+                      height={48}
+                      className="sm:w-16 sm:h-16 rounded-lg sm:rounded-xl"
                 />
               </div>
-              <h3 className="text-lg font-semibold mb-3 text-gray-900">
+                </div>
+              </div>
+              <h3 className="text-base sm:text-lg font-semibold mb-3 text-gray-900 text-center px-2">
                 TikTok
               </h3>
-              <p className="text-gray-500 text-center mb-8 leading-relaxed text-sm">
+              <p className="text-gray-500 text-center mb-6 sm:mb-8 leading-relaxed text-sm px-2">
                 Consigue más seguidores, likes y visualizaciones en TikTok.
               </p>
               <Link
                 href="https://goviral.es/collections/tiktok"
                 onClick={() => trackClick("click_collections_tiktok")}
-                className="mt-auto text-center w-full bg-[rgb(214,77,173)] text-white px-5 py-3 rounded-full font-medium hover:bg-[rgb(194,57,153)] transition-all duration-300"
+                className="mt-auto text-center w-full bg-gradient-to-r from-[rgb(214,77,173)] to-[rgb(244,102,110)] text-white px-4 sm:px-5 py-2.5 sm:py-3 rounded-full font-medium text-sm sm:text-base hover:shadow-lg transition-all duration-300 transform hover:scale-105"
               >
                 Ver Servicios
               </Link>
             </div>
 
             {/* YouTube */}
-            <div className="bg-white rounded-3xl p-8 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)] hover:translate-y-[-8px] transition-all duration-300 flex flex-col items-center h-full">
-              <div className="mb-8 transform hover:scale-105 transition-transform duration-300">
+            <div className="group bg-gradient-to-b from-white to-[#f8f8fa] rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)] hover:translate-y-[-4px] sm:hover:translate-y-[-8px] transition-all duration-300 flex flex-col items-center h-full border border-gray-100">
+              <div className="mb-6 sm:mb-8 transform hover:scale-105 transition-transform duration-300 relative">
+                <div className="bg-red-600 p-1 rounded-xl sm:rounded-2xl">
+                  <div className="bg-white p-2 sm:p-3 rounded-lg sm:rounded-xl">
                 <Image
                   src="/youtube.png"
                   alt="YouTube"
-                  width={64}
-                  height={64}
-                  className="rounded-2xl"
+                      width={48}
+                      height={48}
+                      className="sm:w-16 sm:h-16 rounded-lg sm:rounded-xl"
                 />
               </div>
-              <h3 className="text-lg font-semibold mb-3 text-gray-900">
+                </div>
+              </div>
+              <h3 className="text-base sm:text-lg font-semibold mb-3 text-gray-900 text-center px-2">
                 YouTube
               </h3>
-              <p className="text-gray-500 text-center mb-8 leading-relaxed text-sm">
+              <p className="text-gray-500 text-center mb-6 sm:mb-8 leading-relaxed text-sm px-2">
                 Aumenta tus suscriptores, likes y visualizaciones en YouTube.
               </p>
               <Link
                 href="https://goviral.es/collections/youtube"
                 onClick={() => trackClick("click_collections_youtube")}
-                className="mt-auto text-center w-full bg-[rgb(214,77,173)] text-white px-5 py-3 rounded-full font-medium hover:bg-[rgb(194,57,153)] transition-all duration-300"
+                className="mt-auto text-center w-full bg-gradient-to-r from-[rgb(214,77,173)] to-[rgb(244,102,110)] text-white px-4 sm:px-5 py-2.5 sm:py-3 rounded-full font-medium text-sm sm:text-base hover:shadow-lg transition-all duration-300 transform hover:scale-105"
               >
                 Ver Servicios
               </Link>
             </div>
 
             {/* Spotify */}
-            <div className="bg-white rounded-3xl p-8 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)] hover:translate-y-[-8px] transition-all duration-300 flex flex-col items-center h-full">
-              <div className="mb-8 transform hover:scale-105 transition-transform duration-300">
+            <div className="group bg-gradient-to-b from-white to-[#f8f8fa] rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)] hover:translate-y-[-4px] sm:hover:translate-y-[-8px] transition-all duration-300 flex flex-col items-center h-full border border-gray-100">
+              <div className="mb-6 sm:mb-8 transform hover:scale-105 transition-transform duration-300 relative">
+                <div className="bg-green-500 p-1 rounded-xl sm:rounded-2xl">
+                  <div className="bg-white p-2 sm:p-3 rounded-lg sm:rounded-xl">
                 <Image
                   src="/spotify.png"
                   alt="Spotify"
-                  width={64}
-                  height={64}
-                  className="rounded-2xl"
+                      width={48}
+                      height={48}
+                      className="sm:w-16 sm:h-16 rounded-lg sm:rounded-xl"
                 />
               </div>
-              <h3 className="text-lg font-semibold mb-3 text-gray-900">
+                </div>
+              </div>
+              <h3 className="text-base sm:text-lg font-semibold mb-3 text-gray-900 text-center px-2">
                 Spotify
               </h3>
-              <p className="text-gray-500 text-center mb-8 leading-relaxed text-sm">
+              <p className="text-gray-500 text-center mb-6 sm:mb-8 leading-relaxed text-sm px-2">
                 Consigue más seguidores, reproducciones y guardados en Spotify.
               </p>
               <Link
                 href="https://goviral.es/collections/spotify"
                 onClick={() => trackClick("click_collections_spotify")}
-                className="mt-auto text-center w-full bg-[rgb(214,77,173)] text-white px-5 py-3 rounded-full font-medium hover:bg-[rgb(194,57,153)] transition-all duration-300"
+                className="mt-auto text-center w-full bg-gradient-to-r from-[rgb(214,77,173)] to-[rgb(244,102,110)] text-white px-4 sm:px-5 py-2.5 sm:py-3 rounded-full font-medium text-sm sm:text-base hover:shadow-lg transition-all duration-300 transform hover:scale-105"
               >
                 Ver Servicios
               </Link>
@@ -452,33 +436,33 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Pricing Section - Apple Style */}
-      <section className="py-24 md:py-32 bg-white relative overflow-hidden">
-        {/* Background Elements */}
-        <div className="absolute top-40 left-0 w-64 h-64 bg-[rgb(214,77,173)] opacity-5 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-40 right-0 w-80 h-80 bg-[rgb(244,102,110)] opacity-5 rounded-full blur-3xl"></div>
+      {/* Pricing Section - Apple Style with Mobile Optimization */}
+      <section className="py-16 sm:py-20 md:py-24 lg:py-32 bg-white relative overflow-hidden">
+        {/* Background Elements - Hidden on mobile for better readability */}
+        <div className="hidden md:block absolute top-40 left-0 w-60 h-60 bg-[rgb(214,77,173)] opacity-2 rounded-full blur-3xl"></div>
+        <div className="hidden md:block absolute bottom-40 right-0 w-72 h-72 bg-[rgb(244,102,110)] opacity-2 rounded-full blur-3xl"></div>
 
-        <div className="container mx-auto px-4 md:px-6 relative z-10">
-          <div className="text-center max-w-2xl mx-auto mb-20">
-            <span className="inline-block px-4 py-1.5 bg-[#f2f2f7] text-[rgb(214,77,173)] font-medium text-xs tracking-wide rounded-full mb-6 shadow-sm relative">
+        <div className="container mx-auto px-4 sm:px-6 relative z-10">
+          <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-16 md:mb-20">
+            <span className="inline-block px-3 sm:px-4 py-1.5 bg-[#f2f2f7] text-[rgb(214,77,173)] font-medium text-xs tracking-wide rounded-full mb-6 shadow-sm relative transition-all duration-300 hover:scale-105">
               <span className="absolute inset-0 bg-gradient-to-r from-[rgb(214,77,173)] to-[rgb(244,102,110)] opacity-10 rounded-full"></span>
               <span className="relative">NUESTROS PLANES</span>
             </span>
-            <h2 className="text-3xl md:text-4xl font-semibold mb-6 text-gray-900 tracking-tight">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold mb-4 sm:mb-6 text-gray-900 tracking-tight px-4">
               Elige tu{" "}
               <span className="relative inline-block">
                 <span className="absolute -inset-1 bg-gradient-to-r from-[rgb(214,77,173)] to-[rgb(244,102,110)] blur-md opacity-30 rounded-lg"></span>
-                <span className="relative">plan ideal</span>
+                <span className="relative bg-clip-text text-transparent bg-gradient-to-r from-[rgb(214,77,173)] to-[rgb(244,102,110)]">plan ideal</span>
               </span>
             </h2>
-            <p className="text-gray-500 text-lg leading-relaxed font-light">
+            <p className="text-gray-500 text-base sm:text-lg leading-relaxed font-light px-4">
               Planes diseñados para adaptarse a tus necesidades y objetivos de
               crecimiento en Instagram
             </p>
-            <div className="h-1 w-20 bg-gradient-to-r from-[rgb(214,77,173)] to-[rgb(244,102,110)] rounded-full mt-8 mx-auto"></div>
+            <div className="h-1 w-16 sm:w-20 bg-gradient-to-r from-[rgb(214,77,173)] to-[rgb(244,102,110)] rounded-full mt-6 sm:mt-8 mx-auto"></div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto relative">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 max-w-5xl mx-auto relative">
             {/* Plan Starter */}
             <div className="group bg-gradient-to-b from-white to-[#f8f8fa] p-8 rounded-3xl hover:translate-y-[-8px] transition-all duration-300 flex flex-col h-full shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)] border border-gray-100 relative overflow-hidden">
               {/* No background decoration */}
@@ -986,33 +970,41 @@ export default function Home() {
         </div>
       </section>
 
-      {/* FAQ Section - Apple Style */}
-      <section id="faq" className="py-24 md:py-32 bg-[#f5f5f7]">
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="text-center max-w-2xl mx-auto mb-20">
-            <span className="inline-block px-4 py-1.5 bg-white text-[rgb(214,77,173)] font-medium text-xs tracking-wide rounded-full mb-6">
+      {/* FAQ Section - Apple Style with Mobile Optimization */}
+      <section id="faq" className="py-16 sm:py-20 md:py-24 lg:py-32 bg-[#f5f5f7] relative overflow-hidden">
+        {/* Background Elements - Hidden on mobile */}
+        <div className="hidden md:block absolute top-20 left-10 w-64 h-64 bg-gradient-to-r from-[#FF7A00] to-[#FF0169] opacity-1 rounded-full blur-3xl"></div>
+        <div className="hidden md:block absolute bottom-20 right-10 w-80 h-80 bg-gradient-to-r from-[#FF0169] to-[#D300C5] opacity-1 rounded-full blur-3xl"></div>
+        
+        <div className="container mx-auto px-4 sm:px-6 relative z-10">
+          <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-16 md:mb-20">
+            <span className="inline-block px-3 sm:px-4 py-1.5 bg-white text-[rgb(214,77,173)] font-medium text-xs tracking-wide rounded-full mb-6 transition-all duration-300 hover:scale-105">
               PREGUNTAS FRECUENTES
             </span>
-            <h2 className="text-3xl md:text-4xl font-semibold mb-6 text-gray-900 tracking-tight">
-              Preguntas y Respuestas
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold mb-4 sm:mb-6 text-gray-900 tracking-tight px-4">
+              Preguntas y{" "}
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-[rgb(214,77,173)] to-[rgb(244,102,110)]">
+                Respuestas
+              </span>
             </h2>
-            <p className="text-gray-500 text-lg leading-relaxed font-light">
+            <p className="text-gray-500 text-base sm:text-lg leading-relaxed font-light px-4">
               A continuación encontrará la respuesta a las preguntas más
               frecuentes que se plantean sobre nuestros servicios.
             </p>
+            <div className="h-1 w-16 sm:w-20 bg-gradient-to-r from-[rgb(214,77,173)] to-[rgb(244,102,110)] rounded-full mt-6 sm:mt-8 mx-auto"></div>
           </div>
 
-          <div className="max-w-3xl mx-auto space-y-6">
+          <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6">
             {/* Pregunta 1 */}
-            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <div className="bg-gradient-to-b from-white to-[#f8f8fa] rounded-xl sm:rounded-2xl shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)] border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow duration-300">
               <details className="group">
-                <summary className="flex items-center justify-between p-6 cursor-pointer">
-                  <h3 className="text-lg font-medium text-gray-900">
+                <summary className="flex items-center justify-between p-4 sm:p-6 cursor-pointer hover:bg-gray-50 transition-colors duration-300">
+                  <h3 className="text-base sm:text-lg font-medium text-gray-900 pr-4">
                     ¿Cuánto tiempo se tarda en entregar mi pedido?
                   </h3>
-                  <span className="ml-6 flex-shrink-0 text-[rgb(214,77,173)]">
+                  <span className="ml-4 flex-shrink-0 text-[rgb(214,77,173)] p-2 rounded-full hover:bg-pink-50 transition-colors duration-300">
                     <svg
-                      className="h-6 w-6 transform group-open:rotate-180 transition-transform duration-300"
+                      className="h-5 w-5 sm:h-6 sm:w-6 transform group-open:rotate-180 transition-transform duration-300"
                       xmlns="http://www.w3.org/2000/svg"
                       fill="none"
                       viewBox="0 0 24 24"
@@ -1027,8 +1019,8 @@ export default function Home() {
                     </svg>
                   </span>
                 </summary>
-                <div className="px-6 pb-6 pt-0">
-                  <p className="text-gray-600">
+                <div className="px-4 sm:px-6 pb-4 sm:pb-6 pt-0">
+                  <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
                     La entrega del pedido se realiza en pocos minutos
                     normalmente. El tiempo máximo de entrega es de 72 horas.
                   </p>
@@ -1037,16 +1029,16 @@ export default function Home() {
             </div>
 
             {/* Pregunta 2 */}
-            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <div className="bg-gradient-to-b from-white to-[#f8f8fa] rounded-xl sm:rounded-2xl shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)] border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow duration-300">
               <details className="group">
-                <summary className="flex items-center justify-between p-6 cursor-pointer">
-                  <h3 className="text-lg font-medium text-gray-900">
+                <summary className="flex items-center justify-between p-4 sm:p-6 cursor-pointer hover:bg-gray-50 transition-colors duration-300">
+                  <h3 className="text-base sm:text-lg font-medium text-gray-900 pr-4">
                     ¿Corro el riesgo de ser prohibido o sancionado si compro sus
                     servicios?
                   </h3>
-                  <span className="ml-6 flex-shrink-0 text-[rgb(214,77,173)]">
+                  <span className="ml-4 flex-shrink-0 text-[rgb(214,77,173)] p-2 rounded-full hover:bg-pink-50 transition-colors duration-300">
                     <svg
-                      className="h-6 w-6 transform group-open:rotate-180 transition-transform duration-300"
+                      className="h-5 w-5 sm:h-6 sm:w-6 transform group-open:rotate-180 transition-transform duration-300"
                       xmlns="http://www.w3.org/2000/svg"
                       fill="none"
                       viewBox="0 0 24 24"
@@ -1061,8 +1053,8 @@ export default function Home() {
                     </svg>
                   </span>
                 </summary>
-                <div className="px-6 pb-6 pt-0">
-                  <p className="text-gray-600">
+                <div className="px-4 sm:px-6 pb-4 sm:pb-6 pt-0">
+                  <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
                     No, nuestros servicios son seguros y no existe posibilidad
                     de baneo por parte de las plataformas. Sin embargo, un uso
                     abusivo puede provocar shadow bans temporales en algunas
@@ -1073,15 +1065,15 @@ export default function Home() {
             </div>
 
             {/* Pregunta 3 */}
-            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <div className="bg-gradient-to-b from-white to-[#f8f8fa] rounded-xl sm:rounded-2xl shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)] border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow duration-300">
               <details className="group">
-                <summary className="flex items-center justify-between p-6 cursor-pointer">
-                  <h3 className="text-lg font-medium text-gray-900">
+                <summary className="flex items-center justify-between p-4 sm:p-6 cursor-pointer hover:bg-gray-50 transition-colors duration-300">
+                  <h3 className="text-base sm:text-lg font-medium text-gray-900 pr-4">
                     ¿Necesita mis credenciales para brindar los servicios?
                   </h3>
-                  <span className="ml-6 flex-shrink-0 text-[rgb(214,77,173)]">
+                  <span className="ml-4 flex-shrink-0 text-[rgb(214,77,173)] p-2 rounded-full hover:bg-pink-50 transition-colors duration-300">
                     <svg
-                      className="h-6 w-6 transform group-open:rotate-180 transition-transform duration-300"
+                      className="h-5 w-5 sm:h-6 sm:w-6 transform group-open:rotate-180 transition-transform duration-300"
                       xmlns="http://www.w3.org/2000/svg"
                       fill="none"
                       viewBox="0 0 24 24"
@@ -1096,8 +1088,8 @@ export default function Home() {
                     </svg>
                   </span>
                 </summary>
-                <div className="px-6 pb-6 pt-0">
-                  <p className="text-gray-600">
+                <div className="px-4 sm:px-6 pb-4 sm:pb-6 pt-0">
+                  <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
                     No, no necesitamos tus credenciales para brindar nuestros
                     servicios.
                   </p>
@@ -1106,15 +1098,15 @@ export default function Home() {
             </div>
 
             {/* Pregunta 4 */}
-            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <div className="bg-gradient-to-b from-white to-[#f8f8fa] rounded-xl sm:rounded-2xl shadow-[0_10px_40px_-15px_rgba(0,0,0,0.1)] border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow duration-300">
               <details className="group">
-                <summary className="flex items-center justify-between p-6 cursor-pointer">
-                  <h3 className="text-lg font-medium text-gray-900">
+                <summary className="flex items-center justify-between p-4 sm:p-6 cursor-pointer hover:bg-gray-50 transition-colors duration-300">
+                  <h3 className="text-base sm:text-lg font-medium text-gray-900 pr-4">
                     ¿Se entrega factura con los pedidos?
                   </h3>
-                  <span className="ml-6 flex-shrink-0 text-[rgb(214,77,173)]">
+                  <span className="ml-4 flex-shrink-0 text-[rgb(214,77,173)] p-2 rounded-full hover:bg-pink-50 transition-colors duration-300">
                     <svg
-                      className="h-6 w-6 transform group-open:rotate-180 transition-transform duration-300"
+                      className="h-5 w-5 sm:h-6 sm:w-6 transform group-open:rotate-180 transition-transform duration-300"
                       xmlns="http://www.w3.org/2000/svg"
                       fill="none"
                       viewBox="0 0 24 24"
@@ -1129,8 +1121,8 @@ export default function Home() {
                     </svg>
                   </span>
                 </summary>
-                <div className="px-6 pb-6 pt-0">
-                  <p className="text-gray-600">
+                <div className="px-4 sm:px-6 pb-4 sm:pb-6 pt-0">
+                  <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
                     Sí, en los correos de confirmación del pedido ofrecemos la
                     posibilidad de obtener una factura del pedido.
                   </p>
@@ -1141,23 +1133,31 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Testimonials Section - Apple Style */}
-      <section id="testimonios" className="py-24 md:py-32 bg-white">
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="text-center max-w-2xl mx-auto mb-20">
-            <span className="inline-block px-4 py-1.5 bg-[#f2f2f7] text-[rgb(214,77,173)] font-medium text-xs tracking-wide rounded-full mb-6">
+      {/* Testimonials Section - Apple Style with Mobile Optimization */}
+      <section id="herramientas" className="py-16 sm:py-20 md:py-24 lg:py-32 bg-white relative overflow-hidden">
+        {/* Background Elements - Hidden on mobile */}
+        <div className="hidden md:block absolute top-20 left-10 w-64 h-64 bg-gradient-to-r from-[#FF7A00] to-[#FF0169] opacity-1 rounded-full blur-3xl"></div>
+        <div className="hidden md:block absolute bottom-20 right-10 w-80 h-80 bg-gradient-to-r from-[#FF0169] to-[#D300C5] opacity-1 rounded-full blur-3xl"></div>
+        
+        <div className="container mx-auto px-4 sm:px-6 relative z-10">
+          <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-16 md:mb-20">
+            <span className="inline-block px-3 sm:px-4 py-1.5 bg-[#f2f2f7] text-[rgb(214,77,173)] font-medium text-xs tracking-wide rounded-full mb-6 transition-all duration-300 hover:scale-105">
               Testimonios
             </span>
-            <h2 className="text-3xl md:text-4xl font-semibold mb-6 text-gray-900 tracking-tight">
-              Lo que dicen nuestros clientes
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold mb-4 sm:mb-6 text-gray-900 tracking-tight px-4">
+              Lo que dicen nuestros{" "}
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-[rgb(214,77,173)] to-[rgb(244,102,110)]">
+                clientes
+              </span>
             </h2>
-            <p className="text-gray-500 text-lg leading-relaxed font-light">
+            <p className="text-gray-500 text-base sm:text-lg leading-relaxed font-light px-4">
               Miles de personas y empresas confían en nosotros para crecer en
               redes sociales
             </p>
+            <div className="h-1 w-16 sm:w-20 bg-gradient-to-r from-[rgb(214,77,173)] to-[rgb(244,102,110)] rounded-full mt-6 sm:mt-8 mx-auto"></div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {/* Testimonial 1 */}
             <div className="bg-[#f5f5f7] p-8 rounded-3xl hover:translate-y-[-8px] transition-all duration-300 flex flex-col h-full">
               <div className="flex items-center mb-6">
@@ -1427,207 +1427,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer - Apple Style */}
-      <footer id="contacto" className="bg-[#f5f5f7] text-gray-600 py-20">
-        <div className="container mx-auto px-4 md:px-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
-            <div className="space-y-6">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-2 bg-white rounded-xl shadow-sm">
-                  <Image
-                    src="/logo.png"
-                    alt="GoViral Logo"
-                    width={36}
-                    height={36}
-                    className="rounded-lg"
-                  />
-                </div>
-                <span className="font-semibold text-xl tracking-tight text-gray-900">
-                  GoViral
-                </span>
-              </div>
-              <p className="text-gray-500 leading-relaxed text-sm">
-                Servicios de marketing digital para redes sociales. Impulsa tu
-                presencia online con nosotros.
-              </p>
-              <div className="flex space-x-5 pt-4">
-                <a
-                  href="https://www.tiktok.com/@goviral_oficial"
-                  className="text-gray-400 hover:text-[rgb(214,77,173)] transition-colors"
-                >
-                  <svg
-                    className="w-5 h-5"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                  >
-                    <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
-                  </svg>
-                </a>
-                <a
-                  href="https://www.instagram.com/goviral_oficial/"
-                  className="text-gray-400 hover:text-[rgb(214,77,173)] transition-colors"
-                >
-                  <svg
-                    className="w-5 h-5"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.048-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.024-.06-1.379-.06-3.808v-.63c0-2.43.013-2.784.06-3.808.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 015.45 2.525c.636-.247 1.363-.416 2.427-.465C8.901 2.013 9.256 2 11.685 2h.63zm-.081 1.802h-.468c-2.456 0-2.784.011-3.807.058-.975.045-1.504.207-1.857.344-.467.182-.8.398-1.15.748-.35.35-.566.683-.748 1.15-.137.353-.3.882-.344 1.857-.047 1.023-.058 1.351-.058 3.807v.468c0 2.456.011 2.784.058 3.807.045.975.207 1.504.344 1.857.182.466.399.8.748 1.15.35.35.683.566 1.15.748.353.137.882.3 1.857.344 1.054.048 1.37.058 4.041.058h.08c2.597 0 2.917-.01 3.96-.058.976-.045 1.505-.207 1.858-.344.466-.182.8-.398 1.15-.748.35-.35.566-.683.748-1.15.137-.353.3-.882.344-1.857.048-1.055.058-1.37.058-4.041v-.08c0-2.597-.01-2.917-.058-3.96-.045-.976-.207-1.505-.344-1.858a3.097 3.097 0 00-.748-1.15 3.098 3.098 0 00-1.15-.748c-.353-.137-.882-.3-1.857-.344-1.023-.047-1.351-.058-3.807-.058zM12 6.865a5.135 5.135 0 110 10.27 5.135 5.135 0 010-10.27zm0 1.802a3.333 3.333 0 100 6.666 3.333 3.333 0 000-6.666zm5.338-3.205a1.2 1.2 0 110 2.4 1.2 1.2 0 010-2.4z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </a>
-                <a
-                  href="https://x.com/goviral_oficial"
-                  className="text-gray-400 hover:text-[rgb(214,77,173)] transition-colors"
-                >
-                  <svg
-                    className="w-5 h-5"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                  >
-                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                  </svg>
-                </a>
-              </div>
-            </div>
-
-            <div className="mt-10 md:mt-0">
-              <h3 className="font-semibold text-base mb-6 text-gray-900">
-                Enlaces Rápidos
-              </h3>
-              <ul className="space-y-4">
-                <li>
-                  <Link
-                    href="#inicio"
-                    className="text-gray-500 hover:text-[rgb(214,77,173)] transition-colors duration-200 text-sm"
-                  >
-                    Inicio
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="#servicios"
-                    className="text-gray-500 hover:text-[rgb(214,77,173)] transition-colors duration-200 text-sm"
-                  >
-                    Servicios
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="#testimonios"
-                    className="text-gray-500 hover:text-[rgb(214,77,173)] transition-colors duration-200 text-sm"
-                  >
-                    Testimonios
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="https://goviral.es/pages/contact"
-                    onClick={() => trackClick('click_contacto_footer')}
-                    className="text-gray-500 hover:text-[rgb(214,77,173)] transition-colors duration-200 text-sm"
-                  >
-                    Contacto
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            <div className="mt-10 md:mt-0">
-              <h3 className="font-semibold text-base mb-6 text-gray-900">
-                Servicios
-              </h3>
-              <ul className="space-y-4">
-                <li>
-                  <Link
-                    href="https://goviral.es/collections/instagram"
-                    onClick={() =>
-                      trackClick("click_collections_instagram_footer")
-                    }
-                    className="text-gray-500 hover:text-[rgb(214,77,173)] transition-colors duration-200 text-sm"
-                  >
-                    Instagram
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="https://goviral.es/collections/tiktok"
-                    onClick={() =>
-                      trackClick("click_collections_tiktok_footer")
-                    }
-                    className="text-gray-500 hover:text-[rgb(214,77,173)] transition-colors duration-200 text-sm"
-                  >
-                    TikTok
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="https://goviral.es/collections/youtube"
-                    onClick={() =>
-                      trackClick("click_collections_youtube_footer")
-                    }
-                    className="text-gray-500 hover:text-[rgb(214,77,173)] transition-colors duration-200 text-sm"
-                  >
-                    YouTube
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="https://goviral.es/collections/spotify"
-                    onClick={() =>
-                      trackClick("click_collections_spotify_footer")
-                    }
-                    className="text-gray-500 hover:text-[rgb(214,77,173)] transition-colors duration-200 text-sm"
-                  >
-                    Spotify
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            <div className="mt-10 md:mt-0">
-              <h3 className="font-semibold text-base mb-6 text-gray-900">
-                Contacto
-              </h3>
-              <ul className="space-y-4">
-                <li className="flex items-center gap-3">
-                  <div className="p-2 bg-[#f2f2f7] rounded-full">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4 text-[rgb(214,77,173)]"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                      />
-                    </svg>
-                  </div>
-                  <span className="text-gray-500 text-sm">
-                    soporte@goviral.es
-                  </span>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="border-t border-gray-200 mt-16 pt-8 text-center text-gray-400">
-            <p className="text-sm">
-              &copy; {new Date().getFullYear()} GoViral. Todos los derechos
-              reservados.
-            </p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </main>
   );
 }
