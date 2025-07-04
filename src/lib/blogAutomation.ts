@@ -2,9 +2,19 @@ import OpenAI from 'openai';
 import { supabase } from './supabase';
 import { generateBlogImage } from './imageGeneration';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!,
-});
+// Lazy initialization of OpenAI client to avoid build-time errors
+let openai: OpenAI | null = null;
+
+const getOpenAIClient = (): OpenAI => {
+  if (!openai) {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error('OPENAI_API_KEY environment variable is required');
+    }
+    openai = new OpenAI({ apiKey });
+  }
+  return openai;
+};
 
 // Interfaces para el sistema
 type PromotionIntensity = 'informativo' | 'moderado' | 'promocional';
@@ -115,7 +125,7 @@ Formato JSON requerido:
 }
 `;
 
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAIClient().chat.completions.create({
       model: "gpt-4",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.7,
@@ -221,7 +231,7 @@ Formato JSON requerido:
 }
 `;
 
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAIClient().chat.completions.create({
       model: "gpt-4",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.8,
@@ -332,7 +342,7 @@ SEO:
 IMPORTANTE: Devuelve SOLO el contenido markdown del artículo, sin explicaciones adicionales.
 `;
 
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAIClient().chat.completions.create({
       model: "gpt-4",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.7,

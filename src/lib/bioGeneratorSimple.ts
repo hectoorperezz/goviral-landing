@@ -52,9 +52,18 @@ export interface BioGenerationResult {
 // ===============================================
 
 export class InstagramBioGeneratorService {
-  private openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY!,
-  });
+  private _openai: OpenAI | null = null;
+  
+  private get openai(): OpenAI {
+    if (!this._openai) {
+      const apiKey = process.env.OPENAI_API_KEY;
+      if (!apiKey) {
+        throw new Error('OPENAI_API_KEY environment variable is required');
+      }
+      this._openai = new OpenAI({ apiKey });
+    }
+    return this._openai;
+  }
 
   /**
    * Main entry point: Generate multiple bio variations

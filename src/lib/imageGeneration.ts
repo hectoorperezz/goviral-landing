@@ -1,8 +1,18 @@
 import OpenAI from 'openai';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!,
-});
+// Lazy initialization of OpenAI client to avoid build-time errors
+let openai: OpenAI | null = null;
+
+const getOpenAIClient = (): OpenAI => {
+  if (!openai) {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error('OPENAI_API_KEY environment variable is required');
+    }
+    openai = new OpenAI({ apiKey });
+  }
+  return openai;
+};
 
 // Paleta de colores GoViral
 const GOVIRAL_COLOR_PALETTE = {
@@ -148,7 +158,7 @@ no text or watermarks, no human elements, ready for blog featured image use.`;
       console.log(`🎨 Generando imagen para: ${request.title}`);
       console.log(`📝 Prompt optimizado creado...`);
 
-      const response = await openai.images.generate({
+      const response = await getOpenAIClient().images.generate({
         model: "dall-e-3",
         prompt: prompt,
         size: "1792x1024", // 16:9 aspect ratio optimizado para blog headers
