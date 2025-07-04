@@ -54,16 +54,28 @@ interface EngagementAnalysisResult {
 }
 
 export class EngagementCalculatorService {
-  private supabase = createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+  private _supabase: any = null;
+  
+  private get supabase() {
+    if (!this._supabase) {
+      const url = process.env.SUPABASE_URL;
+      const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      if (url && key) {
+        this._supabase = createClient(url, key);
+      }
+    }
+    return this._supabase;
+  }
 
   /**
    * Main method - Get engagement analysis for username (database-first)
    */
   async analyzeProfile(username: string): Promise<EngagementAnalysisResult | null> {
     try {
+      if (!this.supabase) {
+        throw new Error('Supabase client not available. Check environment variables.');
+      }
+
       // Check if we have recent cached data (database-first optimization)
       const cachedProfile = await this.getCachedProfile(username);
       
@@ -86,6 +98,8 @@ export class EngagementCalculatorService {
    * Get cached profile data if available and valid
    */
   private async getCachedProfile(username: string): Promise<EngagementProfileData | null> {
+    if (!this.supabase) return null;
+    
     const { data, error } = await this.supabase
       .from('engagement_profiles')
       .select('*')

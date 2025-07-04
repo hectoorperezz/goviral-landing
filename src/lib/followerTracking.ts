@@ -30,10 +30,18 @@ interface GrowthStats {
 }
 
 export class FollowerTrackingService {
-  private supabase = createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
+  private _supabase: any = null;
+  
+  private get supabase() {
+    if (!this._supabase) {
+      const url = process.env.SUPABASE_URL;
+      const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      if (url && key) {
+        this._supabase = createClient(url, key);
+      }
+    }
+    return this._supabase;
+  }
 
   /**
    * Track user - adds new user to database or updates existing user

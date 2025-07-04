@@ -384,6 +384,10 @@ IMPORTANTE: Devuelve SOLO el contenido markdown del artículo, sin explicaciones
 export class AutoPublisher {
   async publishArticle(article: GeneratedArticle): Promise<string> {
     try {
+      if (!supabase) {
+        throw new Error('Supabase client not available. Check environment variables.');
+      }
+
       const { data, error } = await supabase
         .from('blog_posts')
         .insert({
