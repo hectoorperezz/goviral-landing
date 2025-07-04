@@ -118,8 +118,7 @@ export default function Home() {
               </span>
             </h2>
             <p className="text-gray-500 text-base sm:text-lg leading-relaxed font-light px-4">
-              Ofrecemos servicios de calidad con entrega inmediata y garantía
-              total
+              Ofrecemos servicios de calidad con entrega inmediata y garantía.
             </p>
             <div className="h-1 w-16 sm:w-20 bg-gradient-to-r from-[rgb(214,77,173)] to-[rgb(244,102,110)] rounded-full mt-6 sm:mt-8 mx-auto"></div>
           </div>

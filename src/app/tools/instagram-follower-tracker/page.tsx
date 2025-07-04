@@ -141,9 +141,7 @@ export default function InstagramFollowerTracker() {
                 Herramienta Gratuita
               </span>
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tight text-gray-900 mb-4 sm:mb-6 px-2">
-                <span className="transition-all duration-300 hover:scale-105 inline-block">
-                  Instagram{" "}
-                </span>
+                Instagram{" "}
                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-[rgb(214,77,173)] via-[rgb(244,102,110)] to-[rgb(214,77,173)] animate-gradient-x font-extrabold">
                   Follower Tracker
                 </span>

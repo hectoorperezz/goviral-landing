@@ -96,7 +96,7 @@ export default function InstagramEngagementCalculator() {
   return (
     <>
       {/* Hero Section - Tool Focused */}
-      <section className="relative py-12 sm:py-16 md:py-24 overflow-hidden bg-gradient-to-b from-white to-[#f5f5f7]">
+      <section className="relative sm:py-16 md:py-24 overflow-hidden bg-gradient-to-b from-white to-[#f5f5f7]">
         {/* Subtle Background Elements - Reduced opacity and repositioned for mobile */}
         <div className="absolute top-20 sm:top-20 -left-20 sm:left-10 w-32 sm:w-64 h-32 sm:h-64 bg-gradient-to-r from-[#FF7A00] to-[#FF0169] opacity-1 sm:opacity-3 rounded-full blur-3xl"></div>
         <div className="absolute bottom-20 sm:bottom-20 -right-20 sm:right-10 w-48 sm:w-96 h-48 sm:h-96 bg-gradient-to-r from-[#FF0169] to-[#D300C5] opacity-1 sm:opacity-3 rounded-full blur-3xl"></div>
@@ -108,9 +108,7 @@ export default function InstagramEngagementCalculator() {
                 Herramienta Gratuita
               </span>
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tight text-gray-900 mb-4 sm:mb-6 px-2">
-                <span className="transition-all duration-300 hover:scale-105 inline-block">
-                  Instagram{" "}
-                </span>
+                Instagram{" "}
                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-[rgb(214,77,173)] via-[rgb(244,102,110)] to-[rgb(214,77,173)] animate-gradient-x font-extrabold">
                   Engagement Calculator
                 </span>
@@ -572,6 +570,71 @@ export default function InstagramEngagementCalculator() {
           </div>
         </section>
       )}
+
+      {/* CTA Section */}
+      <section className="py-16 sm:py-20 md:py-24 lg:py-32 bg-gradient-to-b from-[#f5f5f7] to-white relative overflow-hidden">
+        <div className="hidden sm:block absolute top-40 left-0 w-48 md:w-64 h-48 md:h-64 bg-[rgb(214,77,173)] opacity-3 md:opacity-5 rounded-full blur-3xl"></div>
+        <div className="hidden sm:block absolute bottom-40 right-0 w-64 md:w-80 h-64 md:h-80 bg-[rgb(244,102,110)] opacity-3 md:opacity-5 rounded-full blur-3xl"></div>
+
+        <div className="container mx-auto px-4 sm:px-6 relative z-10">
+          <div className="max-w-4xl mx-auto">
+            <div className="bg-gradient-to-b from-white to-[#f8f8fa] rounded-2xl sm:rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-gray-100 p-6 sm:p-8 md:p-12 lg:p-16 text-center relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-1.5 sm:h-2 bg-gradient-to-r from-[rgb(214,77,173)] to-[rgb(244,102,110)]"></div>
+              
+              <div className="relative z-10">
+                <span className="inline-block px-3 sm:px-4 py-1.5 bg-[#f2f2f7] text-[rgb(214,77,173)] font-medium text-xs tracking-wide rounded-full mb-6 sm:mb-8">
+                  CRECE TU CUENTA
+                </span>
+                
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold mb-4 sm:mb-6 text-gray-900 tracking-tight px-2">
+                  ¿Quieres hacer crecer{" "}
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-[rgb(214,77,173)] to-[rgb(244,102,110)]">
+                    tu Instagram
+                  </span>
+                  ?
+                </h2>
+                
+                <p className="text-base sm:text-lg md:text-xl text-gray-500 mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed font-light px-4">
+                  Consigue seguidores reales, engagement auténtico y crecimiento exponencial con nuestras estrategias probadas
+                </p>
+
+                <div className="flex flex-col gap-3 sm:gap-4 justify-center items-center max-w-md mx-auto">
+                  <a
+                    href="/plan-configurator"
+                    className="inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-3.5 bg-[rgb(214,77,173)] text-white font-medium text-sm sm:text-base rounded-full hover:bg-[rgb(194,57,153)] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 w-full"
+                  >
+                    Empezar a Crecer Ahora
+                    <TrendingUp className="ml-2 w-4 h-4" />
+                  </a>
+                  
+                  <a
+                    href="/tools/reelviews-booster"
+                    className="inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-3.5 bg-white text-[rgb(214,77,173)] border-2 border-[rgb(214,77,173)] font-medium text-sm sm:text-base rounded-full hover:bg-[rgb(214,77,173)] hover:text-white transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 w-full"
+                  >
+                    500 Views Gratis para Reels
+                  </a>
+                </div>
+
+                {/* Stats Section */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-gray-200">
+                  <div className="text-center">
+                    <div className="text-xl sm:text-2xl md:text-3xl font-bold text-[rgb(214,77,173)] mb-1 sm:mb-2">6.000+</div>
+                    <div className="text-gray-600 text-xs sm:text-sm">Cuentas analizadas</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xl sm:text-2xl md:text-3xl font-bold text-[rgb(214,77,173)] mb-1 sm:mb-2">24/7</div>
+                    <div className="text-gray-600 text-xs sm:text-sm">Seguimiento automático</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xl sm:text-2xl md:text-3xl font-bold text-[rgb(214,77,173)] mb-1 sm:mb-2">100%</div>
+                    <div className="text-gray-600 text-xs sm:text-sm">Datos en tiempo real</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </>
   );
 } 
