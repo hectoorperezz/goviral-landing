@@ -72,6 +72,20 @@ export default function ToolsPage() {
         "Análisis estratégico",
         "Call-to-actions efectivos"
       ]
+    },
+    {
+      name: "Generador de Guiones para Videos",
+      description: "Crea ideas virales para Reels, TikTok y YouTube",
+      detailedDescription: "Genera ideas y guiones completos para videos virales usando IA avanzada. Optimizado para Instagram Reels, TikTok y YouTube Shorts con elementos trending.",
+      href: "/tools/generador-guiones-videos",
+      icon: "🎬",
+      category: "Content",
+      features: [
+        "5 guiones únicos por generación",
+        "Hooks optimizados para cada plataforma",
+        "Sugerencias visuales y de audio",
+        "Predicción de potencial viral"
+      ]
     }
   ];
 

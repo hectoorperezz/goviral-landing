@@ -36,14 +36,312 @@ interface HistoryData {
   timestamp: string
 }
 
+// Add interpolation function to smooth chart data
+const interpolateData = (data: HistoryData[], targetPoints: number = 15): HistoryData[] => {
+  if (!data || data.length <= 2) return data;
+  
+  // For small datasets, use fewer interpolation points
+  if (data.length <= 5) {
+    targetPoints = Math.min(targetPoints, data.length + 2);
+  }
+  
+  // Never interpolate to more points than makes sense
+  targetPoints = Math.min(targetPoints, data.length * 3);
+
+  try {
+    // Sort by timestamp to ensure chronological order
+    const sortedData = [...data].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+    
+    const firstDate = new Date(sortedData[0].timestamp);
+    const lastDate = new Date(sortedData[sortedData.length - 1].timestamp);
+    
+    // Validate dates
+    if (isNaN(firstDate.getTime()) || isNaN(lastDate.getTime())) {
+      console.warn('Invalid dates in interpolation data');
+      return sortedData;
+    }
+    
+    const totalDuration = lastDate.getTime() - firstDate.getTime();
+    
+    if (totalDuration <= 0) return sortedData;
+
+    const interpolatedData: HistoryData[] = [];
+    const interval = totalDuration / (targetPoints - 1);
+
+    for (let i = 0; i < targetPoints; i++) {
+      const targetTime = firstDate.getTime() + (interval * i);
+      const targetDate = new Date(targetTime);
+
+      // Find the two closest data points
+      let beforeIndex = -1;
+      let afterIndex = -1;
+
+      for (let j = 0; j < sortedData.length - 1; j++) {
+        const currentTime = new Date(sortedData[j].timestamp).getTime();
+        const nextTime = new Date(sortedData[j + 1].timestamp).getTime();
+
+        if (targetTime >= currentTime && targetTime <= nextTime) {
+          beforeIndex = j;
+          afterIndex = j + 1;
+          break;
+        }
+      }
+
+      // If we're before the first point, use the first point
+      if (beforeIndex === -1) {
+        beforeIndex = 0;
+        afterIndex = 0;
+      }
+      // If we're after the last point, use the last point
+      else if (afterIndex === -1) {
+        beforeIndex = sortedData.length - 1;
+        afterIndex = sortedData.length - 1;
+      }
+
+      const beforeData = sortedData[beforeIndex];
+      const afterData = sortedData[afterIndex];
+
+      if (beforeIndex === afterIndex) {
+        // Exact match or boundary case
+        interpolatedData.push({
+          date: targetDate.toLocaleDateString('es-ES', {
+            month: 'short',
+            day: 'numeric'
+          }),
+          followers: beforeData.followers,
+          following: beforeData.following,
+          posts: beforeData.posts,
+          timestamp: targetDate.toISOString()
+        });
+      } else {
+        // Interpolate between two points
+        const beforeTime = new Date(beforeData.timestamp).getTime();
+        const afterTime = new Date(afterData.timestamp).getTime();
+        const ratio = (targetTime - beforeTime) / (afterTime - beforeTime);
+
+        interpolatedData.push({
+          date: targetDate.toLocaleDateString('es-ES', {
+            month: 'short',
+            day: 'numeric'
+          }),
+          followers: Math.round(beforeData.followers + (afterData.followers - beforeData.followers) * ratio),
+          following: Math.round(beforeData.following + (afterData.following - beforeData.following) * ratio),
+          posts: Math.round(beforeData.posts + (afterData.posts - beforeData.posts) * ratio),
+          timestamp: targetDate.toISOString()
+        });
+      }
+    }
+
+    return interpolatedData;
+  } catch (error) {
+    console.error('Error in interpolation:', error);
+    return data;
+  }
+};
+
+type TimePeriod = 'daily' | 'weekly' | 'monthly'
+
 export default function InstagramFollowerTracker() {
   const [searchTerm, setSearchTerm] = useState('')
   const [userData, setUserData] = useState<InstagramUser | null>(null)
   const [historyData, setHistoryData] = useState<HistoryData[]>([])
+  const [rawHistoryData, setRawHistoryData] = useState<HistoryData[]>([])
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>('daily')
   const [loading, setLoading] = useState(false)
   const [loadingHistory, setLoadingHistory] = useState(false)
   const [error, setError] = useState('')
   const searchInputRef = useRef<HTMLInputElement>(null)
+
+  // Function to process data based on selected time period
+  const processDataByTimePeriod = (data: HistoryData[], period: TimePeriod): HistoryData[] => {
+    if (data.length === 0) return data;
+    
+    // For very small datasets, always use daily processing regardless of selected period
+    if (data.length <= 2) {
+      return data.map(item => ({
+        ...item,
+        date: new Date(item.timestamp).toLocaleDateString('es-ES', {
+          month: 'short',
+          day: 'numeric'
+        })
+      })).sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+    }
+
+    // Sort by timestamp
+    const sortedData = [...data].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+    switch (period) {
+      case 'daily':
+        // Group by day and keep only one record per day (latest of the day)
+        const dailyMap = new Map<string, HistoryData>();
+        sortedData.forEach(item => {
+          const dateKey = new Date(item.timestamp).toDateString();
+          const existingItem = dailyMap.get(dateKey);
+          if (!existingItem || new Date(item.timestamp) > new Date(existingItem.timestamp)) {
+            dailyMap.set(dateKey, {
+              ...item,
+              date: new Date(item.timestamp).toLocaleDateString('es-ES', {
+                month: 'short',
+                day: 'numeric'
+              })
+            });
+          }
+        });
+        return Array.from(dailyMap.values()).sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+      case 'weekly':
+        // For datasets smaller than a week, fallback to daily
+        if (sortedData.length < 3) {
+          return processDataByTimePeriod(data, 'daily');
+        }
+        
+        // Group by week and average the values
+        const weeklyMap = new Map<string, {data: HistoryData[], totalFollowers: number, totalFollowing: number, totalPosts: number}>();
+        sortedData.forEach(item => {
+          try {
+            const date = new Date(item.timestamp);
+            if (isNaN(date.getTime())) {
+              console.warn('Invalid timestamp:', item.timestamp);
+              return;
+            }
+            
+            const weekStart = new Date(date);
+            weekStart.setDate(date.getDate() - date.getDay());
+            weekStart.setHours(0, 0, 0, 0);
+            const weekKey = weekStart.toDateString();
+            
+            if (!weeklyMap.has(weekKey)) {
+              weeklyMap.set(weekKey, {data: [], totalFollowers: 0, totalFollowing: 0, totalPosts: 0});
+            }
+            
+            const weekData = weeklyMap.get(weekKey)!;
+            weekData.data.push(item);
+            weekData.totalFollowers += item.followers;
+            weekData.totalFollowing += item.following;
+            weekData.totalPosts += item.posts;
+          } catch (error) {
+            console.warn('Error processing weekly data for item:', item, error);
+          }
+        });
+
+        const weeklyResult = Array.from(weeklyMap.entries())
+          .filter(([_, weekData]) => weekData.data.length > 0)
+          .map(([weekKey, weekData]) => {
+            const count = weekData.data.length;
+            return {
+              date: new Date(weekKey).toLocaleDateString('es-ES', {
+                month: 'short',
+                day: 'numeric'
+              }),
+              followers: Math.round(weekData.totalFollowers / count),
+              following: Math.round(weekData.totalFollowing / count),
+              posts: Math.round(weekData.totalPosts / count),
+              timestamp: weekKey
+            };
+          })
+          .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+          
+        // Fallback to daily if weekly processing failed
+        return weeklyResult.length > 0 ? weeklyResult : processDataByTimePeriod(data, 'daily');
+
+      case 'monthly':
+        // For datasets smaller than a month, fallback to daily
+        if (sortedData.length < 5) {
+          return processDataByTimePeriod(data, 'daily');
+        }
+        
+        // Group by month and average the values
+        const monthlyMap = new Map<string, {data: HistoryData[], totalFollowers: number, totalFollowing: number, totalPosts: number}>();
+        sortedData.forEach(item => {
+          try {
+            const date = new Date(item.timestamp);
+            if (isNaN(date.getTime())) {
+              console.warn('Invalid timestamp:', item.timestamp);
+              return;
+            }
+            
+            const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
+            
+            if (!monthlyMap.has(monthKey)) {
+              monthlyMap.set(monthKey, {data: [], totalFollowers: 0, totalFollowing: 0, totalPosts: 0});
+            }
+            
+            const monthData = monthlyMap.get(monthKey)!;
+            monthData.data.push(item);
+            monthData.totalFollowers += item.followers;
+            monthData.totalFollowing += item.following;
+            monthData.totalPosts += item.posts;
+          } catch (error) {
+            console.warn('Error processing monthly data for item:', item, error);
+          }
+        });
+
+        const monthlyResult = Array.from(monthlyMap.entries())
+          .filter(([_, monthData]) => monthData.data.length > 0)
+          .map(([monthKey, monthData]) => {
+            const count = monthData.data.length;
+            const [year, month] = monthKey.split('-').map(Number);
+            const date = new Date(year, month, 1);
+            return {
+              date: date.toLocaleDateString('es-ES', {
+                month: 'short',
+                year: 'numeric'
+              }),
+              followers: Math.round(monthData.totalFollowers / count),
+              following: Math.round(monthData.totalFollowing / count),
+              posts: Math.round(monthData.totalPosts / count),
+              timestamp: date.toISOString()
+            };
+          })
+          .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+          
+        // Fallback to daily if monthly processing failed
+        return monthlyResult.length > 0 ? monthlyResult : processDataByTimePeriod(data, 'daily');
+
+      default:
+        return sortedData;
+    }
+  };
+
+  // Function to update chart data when time period changes
+  const updateChartData = (period: TimePeriod, rawData?: HistoryData[]) => {
+    const dataToProcess = rawData || rawHistoryData;
+    if (dataToProcess.length === 0) return;
+    
+    try {
+      const processedData = processDataByTimePeriod(dataToProcess, period);
+      
+      // Safety check: ensure we have valid processed data
+      if (!processedData || processedData.length === 0) {
+        console.warn('No processed data available for period:', period);
+        return;
+      }
+      
+      if (period === 'daily' || processedData.length <= 2) {
+        // For daily view or very small datasets, don't interpolate
+        setHistoryData(processedData);
+      } else {
+        // For weekly/monthly with sufficient data, apply interpolation
+        const targetPoints = Math.min(
+          processedData.length + 2, // Never exceed data length + buffer
+          period === 'weekly' ? 8 : 6
+        );
+        const interpolated = interpolateData(processedData, targetPoints);
+        setHistoryData(interpolated);
+      }
+    } catch (error) {
+      console.error('Error updating chart data:', error);
+      // Fallback: use raw data for daily view
+      const fallbackData = processDataByTimePeriod(dataToProcess, 'daily');
+      setHistoryData(fallbackData);
+    }
+  };
+
+  // Handle time period change
+  const handleTimePeriodChange = (period: TimePeriod) => {
+    setTimePeriod(period);
+    updateChartData(period);
+  };
 
   const fetchUserHistory = async (username: string) => {
     if (!username) return
@@ -58,7 +356,10 @@ export default function InstagramFollowerTracker() {
 
       const result = await response.json()
       if (result.success && result.data.history.length > 0) {
-        setHistoryData(result.data.history)
+        // Store raw data
+        setRawHistoryData(result.data.history);
+        // Process data according to current time period
+        updateChartData(timePeriod, result.data.history);
       }
     } catch (err) {
       console.error('Failed to fetch history:', err)
@@ -77,6 +378,7 @@ export default function InstagramFollowerTracker() {
     setError('')
     setUserData(null)
     setHistoryData([])
+    setRawHistoryData([])
 
     try {
       const response = await fetch('/api/instagram/user-info', {
@@ -260,12 +562,28 @@ export default function InstagramFollowerTracker() {
                       href={userData.externalUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center text-[rgb(214,77,173)] hover:text-[rgb(194,57,153)] transition-colors"
+                      className="inline-flex items-center text-[rgb(214,77,173)] hover:text-[rgb(194,57,153)] transition-colors mb-4"
                     >
                       <ExternalLink className="w-4 h-4 mr-1" />
                       {userData.externalUrl}
                     </a>
                   )}
+                  
+                  {/* View Instagram Profile Button */}
+                  <div className="mt-4">
+                    <a
+                      href={`https://instagram.com/${userData.username}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-[#FF7A00] via-[#FF0169] to-[#D300C5] text-white font-medium text-sm rounded-full hover:shadow-lg hover:scale-105 transition-all duration-300 shadow-md"
+                    >
+                      <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                      </svg>
+                      Ver Perfil en Instagram
+                      <ExternalLink className="w-4 h-4 ml-2" />
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
@@ -322,7 +640,7 @@ export default function InstagramFollowerTracker() {
             </div>
 
             {/* Growth Analytics Chart */}
-            {historyData.length > 1 && !userData.isNewUser && (
+            {historyData && historyData.length > 0 && !userData.isNewUser && (
               <div className="bg-gradient-to-b from-white to-[#f8f8fa] rounded-2xl sm:rounded-3xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-gray-100 p-6 sm:p-8 mb-8 relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1.5 sm:h-2 bg-gradient-to-r from-[rgb(214,77,173)] to-[rgb(244,102,110)]"></div>
                 
@@ -334,7 +652,50 @@ export default function InstagramFollowerTracker() {
                     <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
                       Evolución de Seguidores
                     </h3>
-                    <p className="text-gray-600">Últimos 30 días de actividad</p>
+                    <p className="text-gray-600 mb-4">
+                      Últimos 30 días de actividad
+                      {historyData.length > 2 && timePeriod !== 'daily' && (
+                        <span className="block text-xs text-gray-500 mt-1">
+                          Datos suavizados para mejor visualización temporal
+                        </span>
+                      )}
+                    </p>
+                    
+                    {/* Time Period Selector */}
+                    <div className="flex justify-center mb-4">
+                      <div className="bg-gray-100 rounded-full p-1 inline-flex">
+                        <button
+                          onClick={() => handleTimePeriodChange('daily')}
+                          className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                            timePeriod === 'daily'
+                              ? 'bg-[rgb(214,77,173)] text-white shadow-sm'
+                              : 'text-gray-600 hover:text-gray-900'
+                          }`}
+                        >
+                          Diario
+                        </button>
+                        <button
+                          onClick={() => handleTimePeriodChange('weekly')}
+                          className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                            timePeriod === 'weekly'
+                              ? 'bg-[rgb(214,77,173)] text-white shadow-sm'
+                              : 'text-gray-600 hover:text-gray-900'
+                          }`}
+                        >
+                          Semanal
+                        </button>
+                        <button
+                          onClick={() => handleTimePeriodChange('monthly')}
+                          className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+                            timePeriod === 'monthly'
+                              ? 'bg-[rgb(214,77,173)] text-white shadow-sm'
+                              : 'text-gray-600 hover:text-gray-900'
+                          }`}
+                        >
+                          Mensual
+                        </button>
+                      </div>
+                    </div>
                   </div>
 
                   <div className="h-64 sm:h-80 w-full">
@@ -342,7 +703,7 @@ export default function InstagramFollowerTracker() {
                       <div className="flex items-center justify-center h-full">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[rgb(214,77,173)]"></div>
                       </div>
-                    ) : (
+                    ) : historyData && historyData.length > 0 ? (
                       <ResponsiveContainer width="100%" height="100%">
                         <LineChart data={historyData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -350,11 +711,17 @@ export default function InstagramFollowerTracker() {
                             dataKey="date" 
                             stroke="#666"
                             fontSize={12}
+                            interval="preserveStartEnd"
+                            tick={{ fontSize: 11 }}
+                            axisLine={{ stroke: '#e0e0e0' }}
+                            tickLine={{ stroke: '#e0e0e0' }}
                           />
                           <YAxis 
                             stroke="#666"
                             fontSize={12}
                             tickFormatter={formatNumber}
+                            axisLine={{ stroke: '#e0e0e0' }}
+                            tickLine={{ stroke: '#e0e0e0' }}
                           />
                           <Tooltip 
                             contentStyle={{
@@ -364,14 +731,16 @@ export default function InstagramFollowerTracker() {
                               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                             }}
                             formatter={(value: number) => [formatNumber(value), 'Seguidores']}
+                            labelFormatter={(label) => `Fecha: ${label}`}
                           />
                           <Line 
                             type="monotone" 
                             dataKey="followers" 
                             stroke="url(#gradient)" 
                             strokeWidth={3}
-                            dot={{ fill: 'rgb(214,77,173)', strokeWidth: 2, r: 4 }}
+                            dot={{ fill: 'rgb(214,77,173)', strokeWidth: 2, r: 3 }}
                             activeDot={{ r: 6, fill: 'rgb(214,77,173)' }}
+                            connectNulls={true}
                           />
                           <defs>
                             <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -381,6 +750,13 @@ export default function InstagramFollowerTracker() {
                           </defs>
                         </LineChart>
                       </ResponsiveContainer>
+                    ) : (
+                      <div className="flex items-center justify-center h-full">
+                        <p className="text-gray-500 text-center">
+                          No hay suficientes datos para mostrar el gráfico<br/>
+                          <span className="text-sm">Vuelve después de más búsquedas</span>
+                        </p>
+                      </div>
                     )}
                   </div>
 

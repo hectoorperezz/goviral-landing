@@ -115,6 +115,57 @@ export class FollowerTrackingService {
   }
 
   /**
+   * Add new follower snapshot - upserts user and records history
+   */
+  async addFollowerSnapshot(userData: InstagramUserData) {
+    try {
+      console.log(`📊 Adding new snapshot for ${userData.username}: ${userData.followerCount} followers`);
+      
+      // Upsert user data
+      const { data: user, error } = await this.supabase
+        .from('tracked_users')
+        .upsert({
+          username: userData.username,
+          instagram_id: userData.id,
+          full_name: userData.fullName,
+          profile_pic_url: userData.profilePicUrl,
+          is_verified: userData.isVerified,
+          is_private: userData.isPrivate,
+          biography: userData.biography,
+          external_url: userData.externalUrl,
+          current_follower_count: userData.followerCount,
+          current_following_count: userData.followingCount,
+          current_media_count: userData.mediaCount,
+          last_updated_at: new Date().toISOString(),
+          is_active: true
+        }, { 
+          onConflict: 'username',
+          ignoreDuplicates: false 
+        })
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      // Record new snapshot in history
+      await this.recordFollowerSnapshot(user.id, {
+        followerCount: userData.followerCount,
+        followingCount: userData.followingCount,
+        mediaCount: userData.mediaCount
+      });
+
+      console.log(`✅ Successfully added snapshot for ${userData.username}`);
+      return user;
+      
+    } catch (error) {
+      console.error('Error adding follower snapshot:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Get user by username
    */
   async getUserByUsername(username: string) {

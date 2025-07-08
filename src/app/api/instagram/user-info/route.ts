@@ -24,38 +24,7 @@ export async function POST(request: NextRequest) {
 
     const followerService = new FollowerTrackingService();
 
-    // STEP 1: Check if user exists in database first
-    const existingUser = await followerService.getUserByUsername(cleanUsername);
-    
-    if (existingUser) {
-      console.log(`User ${cleanUsername} found in database, returning cached data`);
-      
-      // Get growth stats for existing user
-      const growthStats = await followerService.getGrowthStats(cleanUsername);
-      
-      // Return existing data from database
-      return Response.json({
-        success: true,
-        data: {
-          id: existingUser.instagram_id,
-          username: existingUser.username,
-          fullName: existingUser.full_name || '',
-          followerCount: existingUser.current_follower_count || 0,
-          followingCount: existingUser.current_following_count || 0,
-          mediaCount: existingUser.current_media_count || 0,
-          profilePicUrl: existingUser.profile_pic_url || '',
-          isVerified: existingUser.is_verified || false,
-          isPrivate: existingUser.is_private || false,
-          biography: existingUser.biography || '',
-          externalUrl: existingUser.external_url || '',
-          growthStats,
-          isNewUser: false
-        }
-      });
-    }
-
-    // STEP 2: User not in database, fetch from API
-    console.log(`User ${cleanUsername} not in database, fetching from API`);
+    console.log(`🔍 Fetching fresh data for ${cleanUsername} from API`);
 
     const response = await fetch(
       `https://social-api4.p.rapidapi.com/v1/info?username_or_id_or_url=${cleanUsername}&url_embed_safe=true`,
@@ -102,18 +71,23 @@ export async function POST(request: NextRequest) {
       externalUrl: data.external_url || '',
     };
 
-    console.log(`Fetched new user data for ${userData.username}: ${userData.followerCount} followers`);
+    console.log(`✅ Fetched fresh data for ${userData.username}: ${userData.followerCount} followers`);
 
-    // STEP 3: Store new user in database
+    // ALWAYS create new tracking record and calculate growth stats
     try {
-      await followerService.trackUser(userData);
+      // Add new snapshot to tracking history
+      await followerService.addFollowerSnapshot(userData);
+      
+      // Get growth stats (works for both new and existing users)
+      const growthStats = await followerService.getGrowthStats(cleanUsername);
+      const isNewUser = !growthStats || growthStats.daysTracked <= 1;
       
       return Response.json({
         success: true,
         data: {
           ...userData,
-          growthStats: null, // No growth stats for new users
-          isNewUser: true
+          growthStats,
+          isNewUser
         }
       });
 

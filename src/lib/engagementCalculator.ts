@@ -68,7 +68,7 @@ export class EngagementCalculatorService {
   }
 
   /**
-   * Main method - Get engagement analysis for username (database-first)
+   * Main method - Get engagement analysis for username (always fresh data)
    */
   async analyzeProfile(username: string): Promise<EngagementAnalysisResult | null> {
     try {
@@ -76,17 +76,16 @@ export class EngagementCalculatorService {
         throw new Error('Supabase client not available. Check environment variables.');
       }
 
-      // Check if we have recent cached data (database-first optimization)
-      const cachedProfile = await this.getCachedProfile(username);
+      console.log(`🔍 Analyzing ${username} - fetching fresh data from API`);
       
-      if (cachedProfile && new Date(cachedProfile.cache_expires_at) > new Date()) {
-        console.log(`Using cached data for ${username}`);
-        return await this.buildAnalysisResult(cachedProfile);
+      // ALWAYS perform fresh analysis to build tracking history
+      const result = await this.performFullAnalysis(username);
+      
+      if (result) {
+        console.log(`✅ Fresh analysis completed for ${username}: ${result.current_stats.engagement_rate.toFixed(2)}% engagement`);
       }
-
-      console.log(`Cache expired or missing for ${username}, performing full analysis`);
-      // Perform full API analysis and cache results
-      return await this.performFullAnalysis(username);
+      
+      return result;
       
     } catch (error) {
       console.error('Error analyzing profile:', error);
@@ -115,11 +114,11 @@ export class EngagementCalculatorService {
   }
 
   /**
-   * Perform full API analysis (22 API calls)
+   * Perform full API analysis - creates new historical record
    */
   async performFullAnalysis(username: string): Promise<EngagementAnalysisResult | null> {
     try {
-      console.log(`Starting full analysis for ${username}`);
+      console.log(`🔍 Starting fresh analysis for ${username}`);
       
       // Step 1: Get profile info including follower count
       const profileData = await this.fetchProfileInfo(username);
@@ -136,23 +135,17 @@ export class EngagementCalculatorService {
       // Step 3: Posts already include likes and comments - no additional API calls needed
       const enrichedPosts = postsData;
 
-      // Step 5: Calculate averages and engagement rates
+      // Step 4: Calculate averages and engagement rates
       const analysisData = this.calculateEngagementMetrics(
         enrichedPosts, 
         profileData.follower_count
       );
 
-      // Step 6: Store all data in database
+      // Step 5: Store all data in database (creates new historical record)
       await this.storeAnalysisResults(username, profileData, enrichedPosts, analysisData);
 
-      // Return the complete analysis
-      return await this.buildAnalysisResult({
-        username,
-        follower_count_at_analysis: profileData.follower_count,
-        ...analysisData,
-        last_analyzed_at: new Date().toISOString(),
-        cache_expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 1 month
-      } as EngagementProfileData);
+      // Step 6: Build and return the complete analysis result
+      return await this.buildAnalysisResult(username);
 
     } catch (error) {
       console.error(`Full analysis failed for ${username}:`, error);
@@ -161,22 +154,27 @@ export class EngagementCalculatorService {
   }
 
   /**
-   * Build complete analysis result from profile data
+   * Build complete analysis result from current data
    */
-  private async buildAnalysisResult(profile: EngagementProfileData): Promise<EngagementAnalysisResult> {
-    const [individualPosts, monthlyHistory] = await Promise.all([
-      this.getIndividualPosts(profile.username),
-      this.getMonthlyTrends(profile.username)
+  private async buildAnalysisResult(username: string): Promise<EngagementAnalysisResult> {
+    const [profileData, recentPosts, monthlyHistory] = await Promise.all([
+      this.getProfileData(username),
+      this.getIndividualPosts(username),
+      this.getMonthlyTrends(username)
     ]);
+
+    if (!profileData) {
+      throw new Error(`No analysis data found for ${username}`);
+    }
 
     return {
       current_stats: {
-        avg_likes: profile.avg_likes_last_10,
-        avg_comments: profile.avg_comments_last_10,
-        engagement_rate: profile.overall_engagement_rate,
-        follower_count: profile.follower_count_at_analysis
+        avg_likes: profileData.avg_likes_last_10,
+        avg_comments: profileData.avg_comments_last_10,
+        engagement_rate: profileData.overall_engagement_rate,
+        follower_count: profileData.follower_count_at_analysis
       },
-      individual_posts: individualPosts.map(post => ({
+      individual_posts: recentPosts.map((post: any) => ({
         post_id: post.post_id,
         post_url: post.post_url,
         image_url: post.image_url,
@@ -187,16 +185,34 @@ export class EngagementCalculatorService {
         engagement_rate: post.individual_engagement_rate,
         post_date: post.post_date
       })),
-      monthly_history: monthlyHistory.map(history => ({
+      monthly_history: monthlyHistory.map((history: any) => ({
         month: history.snapshot_month,
         year: history.snapshot_year,
         avg_likes: history.avg_likes_last_10,
         avg_comments: history.avg_comments_last_10,
         engagement_rate: history.overall_engagement_rate
       })),
-      last_analyzed_at: profile.last_analyzed_at,
-      cache_expires_at: profile.cache_expires_at
+      last_analyzed_at: profileData.last_analyzed_at,
+      cache_expires_at: profileData.cache_expires_at
     };
+  }
+
+  /**
+   * Get profile data from engagement_profiles table
+   */
+  async getProfileData(username: string) {
+    const { data, error } = await this.supabase
+      .from('engagement_profiles')
+      .select('*')
+      .eq('username', username)
+      .single();
+
+    if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+      console.error('Error fetching profile data:', error);
+      return null;
+    }
+
+    return data;
   }
 
   /**
@@ -488,7 +504,7 @@ export class EngagementCalculatorService {
   }
 
   /**
-   * Store analysis results in database
+   * Store analysis results in database (optimized approach)
    */
   private async storeAnalysisResults(
     username: string,
@@ -497,19 +513,19 @@ export class EngagementCalculatorService {
     analysisData: any
   ): Promise<void> {
     try {
-      console.log(`Storing analysis results for ${username}`);
+      console.log(`📊 Updating engagement data for ${username}`);
       
-      // Upsert engagement profile
+      // STEP 1: Upsert engagement profile (always fresh data)
       const { data: profile, error: profileError } = await this.supabase
         .from('engagement_profiles')
         .upsert({
           username,
-          follower_count_at_analysis: profileData.follower_count,
+          follower_count_at_analysis: profileData.follower_count || 0,
           avg_likes_last_10: analysisData.avg_likes_last_10,
           avg_comments_last_10: analysisData.avg_comments_last_10,
           overall_engagement_rate: analysisData.overall_engagement_rate,
           last_analyzed_at: new Date().toISOString(),
-          cache_expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 1 month
+          cache_expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days (unused but kept for compatibility)
         }, { 
           onConflict: 'username',
           ignoreDuplicates: false 
@@ -521,13 +537,12 @@ export class EngagementCalculatorService {
         throw profileError;
       }
 
-      // Clear existing individual posts for this profile
+      // STEP 2: Replace individual posts for this profile
       await this.supabase
         .from('individual_posts')
         .delete()
         .eq('profile_id', profile.id);
 
-      // Insert new individual posts
       const postsToInsert = posts.map(post => ({
         profile_id: profile.id,
         post_id: post.id,
@@ -540,7 +555,8 @@ export class EngagementCalculatorService {
         individual_engagement_rate: profileData.follower_count > 0 
           ? ((post.likes_count + post.comments_count) / profileData.follower_count) * 100 
           : 0,
-        post_date: post.taken_at
+        post_date: post.taken_at,
+        analyzed_at: new Date().toISOString()
       }));
 
       const { error: postsError } = await this.supabase
@@ -551,33 +567,73 @@ export class EngagementCalculatorService {
         throw postsError;
       }
 
-      // Create monthly snapshot
-      const now = new Date();
-      const { error: historyError } = await this.supabase
-        .from('monthly_engagement_history')
-        .upsert({
-          profile_id: profile.id,
-          snapshot_month: now.getMonth() + 1,
-          snapshot_year: now.getFullYear(),
-          avg_likes_last_10: analysisData.avg_likes_last_10,
-          avg_comments_last_10: analysisData.avg_comments_last_10,
-          overall_engagement_rate: analysisData.overall_engagement_rate,
-          follower_count_at_snapshot: profileData.follower_count,
-          posts_analyzed_count: posts.length
-        }, {
-          onConflict: 'profile_id,snapshot_month,snapshot_year',
-          ignoreDuplicates: false
-        });
+      // STEP 3: Add monthly snapshot only if >30 days since last record
+      await this.addMonthlySnapshotIfNeeded(profile.id, profileData, analysisData, posts.length);
 
-      if (historyError) {
-        throw historyError;
-      }
-
-      console.log(`Successfully stored analysis for ${username}`);
+      console.log(`✅ Successfully updated engagement data for ${username} with ${posts.length} posts`);
       
     } catch (error) {
       console.error('Error storing analysis results:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Add monthly snapshot only if more than 30 days have passed
+   */
+  private async addMonthlySnapshotIfNeeded(
+    profileId: string, 
+    profileData: any, 
+    analysisData: any, 
+    postsCount: number
+  ) {
+    try {
+      const now = new Date();
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+      // Check if there's a recent snapshot (within 30 days)
+      const { data: recentSnapshot, error: checkError } = await this.supabase
+        .from('monthly_engagement_history')
+        .select('created_at')
+        .eq('profile_id', profileId)
+        .gte('created_at', thirtyDaysAgo.toISOString())
+        .limit(1)
+        .single();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        throw checkError;
+      }
+
+      // If no recent snapshot, create new monthly record
+      if (!recentSnapshot) {
+        const { error: historyError } = await this.supabase
+          .from('monthly_engagement_history')
+          .upsert({
+            profile_id: profileId,
+            snapshot_month: now.getMonth() + 1,
+            snapshot_year: now.getFullYear(),
+            avg_likes_last_10: analysisData.avg_likes_last_10,
+            avg_comments_last_10: analysisData.avg_comments_last_10,
+            overall_engagement_rate: analysisData.overall_engagement_rate,
+            follower_count_at_snapshot: profileData.follower_count || 0,
+            posts_analyzed_count: postsCount
+          }, {
+            onConflict: 'profile_id,snapshot_month,snapshot_year',
+            ignoreDuplicates: false
+          });
+
+        if (historyError) {
+          throw historyError;
+        }
+
+        console.log(`📈 Added monthly snapshot for profile ${profileId}`);
+      } else {
+        console.log(`⏭️ Skipping monthly snapshot - recent record exists for profile ${profileId}`);
+      }
+      
+    } catch (error) {
+      console.error('Error adding monthly snapshot:', error);
+      // Don't throw - monthly snapshot is nice-to-have, not critical
     }
   }
 } 

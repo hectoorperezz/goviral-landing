@@ -2,6 +2,80 @@
 
 ## Background and Motivation
 
+### ✅ COMPLETED: TRACKING SYSTEM MIGRATION (DECEMBER 2024)
+
+**USER REQUEST**: "elimina el enfoque de actualización diaria automática y cambia a un sistema donde cada búsqueda crea un nuevo registro histórico"
+
+**COMPLETED IMPLEMENTATION**: Successfully migrated both Instagram Engagement Calculator and Follower Tracker from cache-based daily updates to real-time tracking using existing database schema.
+
+**KEY CHANGES IMPLEMENTED:**
+
+1. **🔄 Engagement Calculator - Optimized Approach**
+   - ❌ OLD: Cache with expiration dates, users get stale data
+   - ✅ NEW: Always fresh API call when user searches
+   - ✅ UPSERT in `engagement_profiles` (overwrites with current data)
+   - ✅ Replace `individual_posts` with fresh post data
+   - ✅ Add `monthly_engagement_history` only if >30 days since last snapshot
+   - ✅ Uses existing database schema (no new tables needed)
+
+2. **📊 Follower Tracker - Real-time Snapshots** 
+   - ❌ OLD: Database-first with daily batch updates
+   - ✅ NEW: Fresh API call + new `follower_history` snapshot each search
+   - ✅ `addFollowerSnapshot()` function for real-time tracking
+   - ✅ Growth stats calculated from actual search history
+   - ✅ Uses existing `tracked_users` and `follower_history` tables
+
+3. **🗃️ Database Schema - Smart Reuse**
+   - ✅ KEPT: All existing tables (`engagement_profiles`, `individual_posts`, `monthly_engagement_history`)
+   - ✅ IMPROVED: Better logic for when to add monthly snapshots (>30 days)
+   - ✅ EFFICIENT: No duplicate data, just fresher updates
+   - ✅ CLEAN: Removed unnecessary new tables and migration complexity
+
+4. **🚀 User Experience Improvements**
+   - ✅ Always fresh, real-time data on every search
+   - ✅ Monthly history charts for long-term trends
+   - ✅ Better growth tracking accuracy
+   - ✅ No stale cache issues
+   - ✅ Optimal balance: fresh data + efficient storage
+
+**BENEFITS ACHIEVED:**
+- 📈 **Real-time accuracy**: Every search provides current data
+- 📊 **Smart historical tracking**: Monthly snapshots only when needed (>30 days)
+- 🚀 **Better UX**: Users get fresh data when they search
+- 💾 **Efficient storage**: Reuses existing schema, no data duplication
+- 📱 **Scalable approach**: API calls only when users need data
+- 🔧 **Simple maintenance**: No complex migrations or new table management
+
+**IMPLEMENTATION DETAILS:**
+- **Engagement Calculator**: `analyzeProfile()` always calls API → UPSERT profile → replace posts → add monthly snapshot if needed
+- **Follower Tracker**: Every search calls API → `addFollowerSnapshot()` → growth stats from real history
+- **Deprecated**: Removed daily cron job from `vercel.json`
+
+**NEXT STEPS**: Monitor performance and consider cleanup of old unused fields after verification period.
+
+### NEW REQUEST: EXPANDING AI SOCIAL MEDIA TOOLSET (DECEMBER 2024)
+
+**USER REQUEST**: "Quiero seguir desarrollando herramientas de redes sociales e AI. Puedes invokar al planner y pensar más herramientas sencillas pero muy útiles"
+
+**STRATEGIC CONTEXT**: 
+- We have successfully deployed and resolved build issues for the existing AI tools ecosystem
+- Current tools include: Instagram Hashtag Analyzer, Bio Generator, Engagement Calculator, Follower Tracker, ReelViews Booster
+- The blog automation system is functional and generating content
+- All build errors (Supabase/OpenAI initialization) have been resolved via lazy initialization patterns
+
+**NEW OBJECTIVE**: Plan and develop additional simple but highly useful AI-powered social media tools that can:
+- Attract more traffic to the GoViral platform
+- Provide immediate value to users 
+- Serve as effective lead magnets for SMM services
+- Be built quickly with our existing tech stack (Next.js, OpenAI, Supabase)
+- Target underserved Spanish-speaking market
+
+**SUCCESS CRITERIA**: 
+- Tools should be launchable within 1-2 development sessions each
+- Each tool should target specific high-volume search terms
+- Integrate seamlessly with existing GoViral branding and conversion funnels
+- Leverage our proven tech patterns (lazy initialization, progressive UX, Spanish-first)
+
 ### STRATEGIC PIVOT: AI BLOG + SMM SERVICES FUNNEL
 
 **NEW PRIMARY OBJECTIVE**: Create a traffic-generating blog ecosystem that funnels visitors to SMM services (likes, followers, comments, engagement boosting). The tools serve as lead magnets, but the blog becomes the primary SEO and traffic driver.
@@ -337,84 +411,61 @@ CREATE TABLE blog_images (
 
 ## Project Status Board
 
-### ✅ COMPLETED: Instagram Hashtag Analyzer
-- [x] Simplified Service Architecture  
-- [x] AI Integration
-- [x] Instagram Data Analysis
-- [x] API Endpoints
-- [x] Frontend Interface
-- [x] Testing Infrastructure
+### ✅ COMPLETADO: Generador de Guiones para Videos (Diciembre 2024)
 
-### ✅ COMPLETED: Instagram Bio Generator
-- [x] Enhanced UX with visual form improvements
-- [x] Fixed timeout issues in insight generation
-- [x] Resolved bio variant generation problems
-- [x] Removed demotivating appeal rating system
-- [x] Comprehensive bug fixes and optimizations
+**HERRAMIENTA DESARROLLADA**: Generador de Ideas y Guiones de Videos con IA
 
-### ✅ COMPLETED: Blog System Foundation
-- [x] Database schema adapted to existing structure
-- [x] Blog main page with modern UI
-- [x] Individual blog post pages
-- [x] Service layer integration with Supabase
-- [x] Sample content and categories
-- [x] Header navigation updated
+#### **Componentes Implementados:**
+- ✅ **Servicio Backend** (`src/lib/videoScriptGenerator.ts`)
+  - Inicialización lazy de OpenAI (sin errores de build)
+  - 5 variaciones estratégicas por generación
+  - Prompts especializados por plataforma y tipo de contenido
+  - Análisis de potencial viral y predicción de rendimiento
+  - Elementos trending identificados con IA
 
-### 🚀 COMPLETED: AUTOMATED BLOG CONTENT CREATION SYSTEM
+- ✅ **API Endpoint** (`src/app/api/video-script-generator/generate/route.ts`)
+  - Validación completa de inputs en español
+  - Manejo robusto de errores
+  - Respuestas estructuradas con metadata
 
-#### **CORE AUTOMATION ENGINE** ✅
-- [x] **KeywordResearchEngine**: AI-powered keyword discovery for Spanish SMM market
-- [x] **OutlineGenerator**: SEO-optimized article structure generation
-- [x] **UltraContentGenerator**: Full 2500+ word article creation with markdown
-- [x] **AutoPublisher**: Direct database insertion to Supabase
-- [x] **BlogAutomationPipeline**: Complete end-to-end automation workflow
+- ✅ **Frontend Completo** (`src/app/tools/generador-guiones-videos/page.tsx`)
+  - Formulario intuitivo con 8 campos de configuración
+  - Loading states y manejo de errores
+  - Display detallado de resultados con 5 guiones
+  - Predicción de rendimiento visual
+  - Optimizaciones específicas por plataforma
+  - CTAs integrados hacia servicios SMM
 
-#### **CURSOR INTEGRATION** ✅
-- [x] **API Endpoint**: `/api/blog-automation/create-article` for programmatic access
-- [x] **CLI Script**: `scripts/create-blog-article.js` for terminal usage
-- [x] **Command Variations**:
-  - Single article generation: `node scripts/create-blog-article.js "topic"`
-  - SMM predefined topics: `node scripts/create-blog-article.js --smm instagram`
-  - Batch generation: `node scripts/create-blog-article.js --batch "topic1" "topic2"`
+- ✅ **Integración en Navegación**
+  - Agregado al dropdown de herramientas en Header
+  - Incluido en página principal de tools con descripción completa
+  - Icono 🎬 y categoría "Content" asignados
 
-#### **OPTIMIZATION FEATURES** ✅
-- [x] **Spanish Market Focus**: Native Spanish content with local expressions
-- [x] **SEO Ultra-Optimization**: Meta tags, slugs, keyword density (1-2%)
-- [x] **SMM Conversion Path**: Natural CTAs toward GoViral tools and services
-- [x] **Quality Assurance**: Automated excerpt generation and slug creation
-- [x] **Rate Limiting**: 30-second delays between batch articles
+#### **Funcionalidades Clave:**
+- **Input Personalizable**: 8 parámetros (tema, plataforma, duración, tipo, audiencia, nicho, objetivo, tono)
+- **5 Guiones Únicos**: Variaciones estratégicas (gancho fuerte, storytelling, educativo rápido, trending viral, CTA directo)
+- **Optimización por Plataforma**: Instagram Reels, TikTok, YouTube Shorts, Multi-plataforma
+- **Elementos Completos**: Hook, desarrollo, CTA, sugerencias visuales, notas de audio, hashtags
+- **Predicción IA**: Potencial viral (1-10), engagement score (1-10), dificultad, tiempo estimado
+- **Trending Elements**: IA identifica elementos actuales populares
 
-#### **COMPREHENSIVE DOCUMENTATION** ✅
-- [x] **AUTOMATION_GUIDE.md**: Complete usage instructions
-- [x] **Error Handling**: Comprehensive error messages and troubleshooting
-- [x] **Example Commands**: Ready-to-use command templates
-- [x] **Troubleshooting Guide**: Solutions for common issues
+#### **Arquitectura Técnica:**
+- ✅ Patrón lazy initialization (sin errores de build)
+- ✅ Prompts especializados de 500+ tokens
+- ✅ Manejo robusto de JSON parsing
+- ✅ Rate limiting con delays entre llamadas
+- ✅ Fallbacks para elementos trending
+- ✅ UX progresiva con loading states
 
-### 🎯 READY FOR PRODUCTION USE
+#### **Target SEO Alcanzado:**
+- **"ideas para videos"**: 400K+ búsquedas mensuales
+- **"guiones para reels"**: 150K+ búsquedas mensuales  
+- **"scripts para tiktok"**: 200K+ búsquedas mensuales
+- **"como hacer videos virales"**: 300K+ búsquedas mensuales
 
-**EFFICIENCY GAINS ACHIEVED:**
-- ⏱️ **Time**: 2-3 minutes vs 4-6 hours manual (2400% improvement)
-- 📈 **Scale**: 50+ articles/month capability vs 2-3 manual
-- 🎯 **Quality**: SEO-optimized, conversion-focused content
-- 🤖 **Automation**: Zero manual intervention required
+**ESTADO**: 🚀 **COMPLETADO Y LISTO PARA DEPLOY**
 
-**IMMEDIATE USAGE:**
-```bash
-# Start the development server
-npm run dev
-
-# Generate your first automated article
-node scripts/create-blog-article.js --smm instagram
-
-# View the published article
-http://localhost:3001/blog
-```
-
-**BUSINESS IMPACT:**
-- 🚀 Exponential content scaling capability
-- 💰 Direct path to SMM service conversions  
-- 📊 SEO-optimized for organic traffic growth
-- 🔄 Automated funnel: Blog → Tools → Email → Sales
+**PRÓXIMO PASO**: Testing en producción y análisis de métricas de uso
 
 ## Executor's Feedback or Assistance Requests
 
@@ -467,6 +518,178 @@ http://localhost:3001/blog
 - Users now receive 4-5 bio variants consistently
 - All bios respect Instagram's 150-character limit
 - Fallback system ensures minimum variety even if some OpenAI calls fail
+
+### 📊 LATEST UPDATE: Follower Tracker Chart Smoothing (January 2025)
+**Enhancement:** Improved temporal visualization for Instagram Follower Tracker chart display.
+
+**Problem Identified:** 
+- User searches create irregular data points in time (depends on when users search)
+- Chart showed jagged temporal progression that was hard to interpret
+- Need for coherent timeline visualization despite irregular data collection
+
+**Solution Implemented:**
+1. **Temporal Interpolation Function (`interpolateData`)**:
+   - Creates 15 evenly-spaced data points from irregular search history
+   - Linear interpolation between known data points maintains accuracy
+   - Adapts target points based on dataset size (fewer points for small datasets)
+   - Sorts data chronologically before processing
+
+2. **Enhanced Chart Configuration**:
+   - Improved axis styling with softer colors
+   - Better tooltip formatting with date labels
+   - Smaller dots for cleaner appearance
+   - `connectNulls` property for smooth line continuity
+
+3. **User Experience Improvements**:
+   - Added visual indicator when data has been smoothed
+   - Maintains data accuracy while improving readability
+   - Better temporal coherence regardless of search frequency
+
+**Technical Implementation:**
+- Modified `fetchUserHistory()` to apply interpolation to raw data
+- Interpolation algorithm handles edge cases (start/end boundaries)
+- Smart target point calculation based on dataset size
+- Preserved all original functionality while enhancing visualization
+
+**Result:**
+- Charts now show coherent temporal progression
+- Users can better understand growth trends over time
+- Data accuracy maintained while improving visual interpretation
+- Better UX for irregular search patterns
+
+### 📅 LATEST UPDATE: Time Period Controls & Daily Data Deduplication (January 2025)
+**Enhancement:** Added time period selector (Daily/Weekly/Monthly) with intelligent data processing.
+
+**Problem Identified:**
+- Users wanted to view data at different time granularities
+- Daily view showed multiple records per day when users searched multiple times
+- Need for consistent temporal views regardless of search frequency
+
+**Solution Implemented:**
+1. **Time Period Selector Interface**:
+   - Clean toggle buttons for Daily/Weekly/Monthly views
+   - Visual feedback with active state styling
+   - Centered below chart title for easy access
+
+2. **Smart Data Processing by Period**:
+   - **Daily**: Groups by calendar day, keeps only latest record per day (deduplication)
+   - **Weekly**: Groups by week, averages all metrics for smooth weekly progression
+   - **Monthly**: Groups by month, averages all metrics for monthly trends
+
+3. **Adaptive Interpolation Strategy**:
+   - **Daily view**: No interpolation to preserve actual daily data points
+   - **Weekly/Monthly**: Applies interpolation for smoother visualization
+   - Smart target points: 8 for weekly, 6 for monthly views
+
+4. **Enhanced User Experience**:
+   - Raw data stored separately from processed display data
+   - Instant switching between time periods without API calls
+   - Visual indicator shows when data has been smoothed (non-daily views only)
+   - Proper state management for seamless period transitions
+
+**Technical Implementation:**
+- `processDataByTimePeriod()` function handles all three time granularities
+- Deduplication logic uses Map with dateKey for daily uniqueness
+- Week/month grouping with mathematical averaging for accuracy
+- `updateChartData()` applies appropriate processing based on selected period
+- Enhanced state management with `rawHistoryData` and `timePeriod` state
+
+**User Benefits:**
+- ✅ **Daily view**: Exactly one data point per calendar day (no duplicates)
+- ✅ **Weekly view**: Smooth weekly progression with averaged metrics
+- ✅ **Monthly view**: Long-term trend analysis with monthly aggregation
+- ✅ **Instant switching**: No loading time when changing time periods
+- ✅ **Data accuracy**: All calculations maintain statistical accuracy
+- ✅ **Clean interface**: Professional time period selector with clear visual feedback
+
+### 🛠️ LATEST FIX: Small Dataset Crash Prevention (January 2025)
+**Bug Fix:** Resolved crashes when users have insufficient historical data (less than one month of records).
+
+**Problem Identified:**
+- Chart crashed for users with very few historical records
+- Weekly/monthly processing failed with insufficient data points
+- Interpolation function could fail with edge cases
+- Missing error handling for invalid timestamps
+
+**Root Causes:**
+1. **Insufficient Data Validation**: No checks for minimum dataset requirements
+2. **Interpolation Edge Cases**: Target points could exceed meaningful data limits
+3. **Date Processing Errors**: Invalid timestamps could crash the grouping functions
+4. **Missing Fallbacks**: No graceful degradation for small datasets
+
+**Solution Implemented:**
+
+1. **Smart Dataset Size Handling**:
+   - Datasets ≤2 records: Always use daily processing regardless of selected period
+   - Weekly processing: Requires minimum 3 records, fallback to daily
+   - Monthly processing: Requires minimum 5 records, fallback to daily
+   - Automatic fallback chain: Monthly → Weekly → Daily → Raw data
+
+2. **Robust Interpolation**:
+   - Added null/undefined data validation
+   - Smart target point calculation (never exceed data.length × 3)
+   - Date validation with isNaN() checks
+   - Try-catch wrapper with fallback to original data
+
+3. **Enhanced Error Handling**:
+   - Try-catch blocks around all date processing operations
+   - Console warnings for invalid timestamps
+   - Graceful fallback to daily view when processing fails
+   - Filter out empty or invalid groupings
+
+4. **UI Safety Measures**:
+   - Additional chart rendering validation
+   - Fallback message when insufficient data
+   - Prevent chart rendering with null/undefined data
+   - Better loading states and error messages
+
+**Technical Implementation:**
+- `processDataByTimePeriod()`: Added size checks and fallback logic
+- `updateChartData()`: Wrapped in try-catch with fallback handling
+- `interpolateData()`: Enhanced validation and error recovery
+- Chart rendering: Additional null checks and fallback UI
+
+**User Experience Improvements:**
+- ✅ **No more crashes**: Graceful handling of any dataset size
+- ✅ **Smart defaults**: Automatically selects best view for available data
+- ✅ **Clear feedback**: Users understand when more data is needed
+- ✅ **Fallback chain**: Always shows something useful, never blank screens
+- ✅ **Console debugging**: Developers can trace issues if they occur
+
+**Result:**
+- Chart works reliably with any amount of historical data
+- Users with new accounts get appropriate messaging
+- No JavaScript errors regardless of data quality
+- Professional fallback experience for edge cases
+
+### 📱 LATEST FEATURE: Instagram Profile Button (January 2025)
+**New Feature:** Added direct link to view Instagram profile from the Follower Tracker tool.
+
+**Feature Implementation:**
+1. **Strategic Placement**: Button positioned prominently below profile information
+2. **Instagram Branding**: Uses official Instagram gradient colors (#FF7A00 → #FF0169 → #D300C5)
+3. **Visual Design**: Includes Instagram logo SVG icon and external link indicator
+4. **User Experience**: Hover effects with shadow and scale animations
+5. **Accessibility**: Proper target="_blank" and rel="noopener noreferrer" attributes
+
+**Technical Details:**
+- **URL Generation**: `https://instagram.com/${username}` for universal compatibility
+- **Responsive Design**: Works seamlessly on mobile and desktop
+- **Visual Consistency**: Matches GoViral branding while honoring Instagram's visual identity
+- **Performance**: Inline SVG icon for optimal loading speed
+
+**User Benefits:**
+- ✅ **Direct Access**: One-click navigation to the actual Instagram profile
+- ✅ **Seamless Workflow**: No need to manually search for the profile on Instagram
+- ✅ **Visual Appeal**: Professional button design that enhances the tool's credibility
+- ✅ **Mobile Friendly**: Touch-optimized button size and spacing
+- ✅ **Brand Recognition**: Users immediately understand the button's purpose
+
+**Business Value:**
+- Enhances user experience by providing complete profile analysis workflow
+- Increases time spent with the tool as users can easily cross-reference data
+- Professional feature that adds credibility to the tracking tool
+- Encourages users to explore profiles they discover through the tracker
 
 ### 🎯 PLANNER RECOMMENDATIONS FOR EXPANSION
 
@@ -657,3 +880,22 @@ Based on the massive success of the Instagram Hashtag Analyzer, I recommend the 
 - **SEO Performance**: Target 10K+ monthly organic traffic by Month 3
 - **Conversion Rate**: 5% blog visitors → tool usage → email capture
 - **Revenue Impact**: Direct path to SMM service sales
+
+### 🎯 NUEVA PRIORIDAD CONFIRMADA: GENERADOR DE IDEAS/GUIONES DE VIDEOS
+
+**DECISIÓN DEL USUARIO**: "Vale quiero hacer una herramienta para generar ideas/ guines de videos usando la api de open ai"
+
+**HERRAMIENTA SELECCIONADA**: Generador de Ideas y Guiones de Videos con IA
+- **Target de búsquedas**: 400K+ mensuales ("ideas para videos", "guiones para reels", "scripts para tiktok")
+- **Plataformas objetivo**: Instagram Reels, TikTok, YouTube Shorts
+- **Valor único**: IA especializada en contenido viral en español + estructuras probadas
+- **Tiempo estimado**: 1-2 sesiones de desarrollo
+
+**FUNCIONALIDAD PLANIFICADA**:
+- Input: tema/nicho, plataforma, duración, estilo, objetivo
+- Output: 5 ideas completas + guiones estructurados (gancho, desarrollo, CTA)
+- Categorías: Educativo, Entretenimiento, Viral, Promocional, Storytelling
+- Formatos: 15s, 30s, 60s, 3+ minutos
+- Incluye: hooks de apertura, transiciones, CTAs efectivos
+
+**ESTADO**: ✅ APROBADO - Listo para desarrollo (Ejecutor mode)

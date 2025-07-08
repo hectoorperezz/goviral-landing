@@ -89,6 +89,11 @@ export default function Header() {
       name: "Generador de Bio con IA",
       description: "5 biografías optimizadas con análisis estratégico",
       href: "/tools/instagram-bio-generator"
+    },
+    {
+      name: "Generador de Guiones para Videos",
+      description: "Crea ideas virales para Reels, TikTok y YouTube",
+      href: "/tools/generador-guiones-videos"
     }
   ];
 
@@ -156,7 +161,8 @@ export default function Header() {
                         "ReelViews Booster": "🚀", 
                         "Calculadora de Engagement": "📊",
                         "Analizador de Hashtags": "🔍",
-                        "Generador de Bio con IA": "✨"
+                        "Generador de Bio con IA": "✨",
+                        "Generador de Guiones para Videos": "🎬"
                       };
                       
                       return (
