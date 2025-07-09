@@ -107,15 +107,24 @@ export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> 
 }
 
 // Get featured/latest blog posts for homepage
-export async function getFeaturedBlogPosts(limit: number = 3): Promise<BlogPost[]> {
+export async function getFeaturedBlogPosts(limit: number = 3, sortBy: 'views' | 'recent' = 'recent'): Promise<BlogPost[]> {
   try {
-    const { data: posts, error } = await supabase
+    let query = supabase
       .from('blog_posts')
       .select('*')
-      .not('published_at', 'is', null)
-      .order('view_count', { ascending: false })
-      .order('published_at', { ascending: false })
-      .limit(limit);
+      .not('published_at', 'is', null);
+
+    // Apply sorting based on preference
+    if (sortBy === 'views') {
+      query = query
+        .order('view_count', { ascending: false })
+        .order('published_at', { ascending: false });
+    } else {
+      // Sort by most recent first
+      query = query.order('published_at', { ascending: false });
+    }
+
+    const { data: posts, error } = await query.limit(limit);
 
     if (error) {
       console.error('Error fetching featured blog posts:', error);

@@ -607,24 +607,24 @@ export class EngagementCalculatorService {
       // If no recent snapshot, create new monthly record
       if (!recentSnapshot) {
         const { error: historyError } = await this.supabase
-          .from('monthly_engagement_history')
-          .upsert({
+        .from('monthly_engagement_history')
+        .upsert({
             profile_id: profileId,
-            snapshot_month: now.getMonth() + 1,
-            snapshot_year: now.getFullYear(),
-            avg_likes_last_10: analysisData.avg_likes_last_10,
-            avg_comments_last_10: analysisData.avg_comments_last_10,
-            overall_engagement_rate: analysisData.overall_engagement_rate,
+          snapshot_month: now.getMonth() + 1,
+          snapshot_year: now.getFullYear(),
+          avg_likes_last_10: analysisData.avg_likes_last_10,
+          avg_comments_last_10: analysisData.avg_comments_last_10,
+          overall_engagement_rate: analysisData.overall_engagement_rate,
             follower_count_at_snapshot: profileData.follower_count || 0,
             posts_analyzed_count: postsCount
-          }, {
-            onConflict: 'profile_id,snapshot_month,snapshot_year',
-            ignoreDuplicates: false
-          });
+        }, {
+          onConflict: 'profile_id,snapshot_month,snapshot_year',
+          ignoreDuplicates: false
+        });
 
-        if (historyError) {
-          throw historyError;
-        }
+      if (historyError) {
+        throw historyError;
+      }
 
         console.log(`📈 Added monthly snapshot for profile ${profileId}`);
       } else {

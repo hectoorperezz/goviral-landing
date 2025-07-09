@@ -7,6 +7,7 @@ import InstagramReelTrial from "@/components/InstagramReelTrial";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { trackClick } from "@/lib/analytics";
+import BlogSectionClient from "@/components/BlogSectionClient";
 
 export default function Home() {
 
@@ -968,6 +969,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Blog Promotion Section */}
+      <BlogSectionClient />
 
       {/* FAQ Section - Apple Style with Mobile Optimization */}
       <section id="faq" className="py-16 sm:py-20 md:py-24 lg:py-32 bg-[#f5f5f7] relative overflow-hidden">
