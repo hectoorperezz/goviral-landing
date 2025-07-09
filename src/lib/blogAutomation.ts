@@ -462,6 +462,7 @@ export class BlogAutomationPipeline {
       
       console.log(`🎨 Generando imagen de portada...`);
       const featuredImage = await generateBlogImage(topic, outline.title, category, 'aesthetic');
+      console.log(`📸 Imagen de portada generada: ${featuredImage}`);
       
       const article: GeneratedArticle = {
         title: outline.title,

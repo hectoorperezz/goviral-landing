@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import { put } from '@vercel/blob';
 
 // Lazy initialization of OpenAI client to avoid build-time errors
 let openai: OpenAI | null = null;
@@ -13,6 +14,10 @@ const getOpenAIClient = (): OpenAI => {
   }
   return openai;
 };
+
+// Check if we're in development or have Blob token
+const IS_DEV = process.env.NODE_ENV === 'development';
+const BLOB_TOKEN = process.env.BLOB_READ_WRITE_TOKEN;
 
 // Paleta de colores GoViral
 const GOVIRAL_COLOR_PALETTE = {
@@ -188,10 +193,11 @@ no text or watermarks, no human elements, ready for blog featured image use.`;
   }
 
   /**
-   * Descarga y guarda la imagen localmente (opcional)
+   * Descarga y guarda la imagen usando Vercel Blob Storage (producción) o filesystem (desarrollo)
    */
   async downloadAndSaveImage(imageUrl: string, filename: string): Promise<string> {
     try {
+      console.log(`⬇️ Descargando imagen desde DALL-E...`);
       const response = await fetch(imageUrl);
       
       if (!response.ok) {
@@ -199,25 +205,67 @@ no text or watermarks, no human elements, ready for blog featured image use.`;
       }
 
       const buffer = await response.arrayBuffer();
-      const fs = require('fs');
-      const path = require('path');
-      
-      // Asegurar que el directorio existe
-      const publicImagesDir = path.join(process.cwd(), 'public', 'blog-images');
-      if (!fs.existsSync(publicImagesDir)) {
-        fs.mkdirSync(publicImagesDir, { recursive: true });
+      console.log(`✅ Imagen descargada (${Math.round(buffer.byteLength / 1024)}KB)`);
+
+      // En producción, usar Vercel Blob Storage
+      if (!IS_DEV && BLOB_TOKEN) {
+        try {
+          console.log(`☁️ Guardando imagen en Blob Storage: ${filename}`);
+          console.log(`🔧 Entorno: Producción (Vercel)`);
+          
+          const blob = await put(`blog-images/${filename}`, buffer, {
+            access: 'public',
+            token: BLOB_TOKEN,
+            addRandomSuffix: false
+          });
+          
+          console.log(`✅ Imagen guardada en Blob Storage: ${blob.url}`);
+          return blob.url;
+          
+        } catch (blobError) {
+          console.error('❌ Error guardando en Blob Storage:', blobError);
+          console.log(`🔄 Fallback: Usando URL original de DALL-E`);
+          // Fallback a URL original si falla Blob Storage
+          return imageUrl;
+        }
       }
       
-      const filePath = path.join(publicImagesDir, filename);
-      fs.writeFileSync(filePath, Buffer.from(buffer));
-      
-      // Retornar la ruta pública para usar en el blog
-      return `/blog-images/${filename}`;
+      // En desarrollo, usar filesystem local
+      else {
+        try {
+          console.log(`📁 Guardando imagen localmente: ${filename}`);
+          console.log(`🔧 Entorno: Desarrollo (Filesystem)`);
+          
+          const fs = require('fs');
+          const path = require('path');
+          
+          // Asegurar que el directorio existe
+          const publicImagesDir = path.join(process.cwd(), 'public', 'blog-images');
+          if (!fs.existsSync(publicImagesDir)) {
+            fs.mkdirSync(publicImagesDir, { recursive: true });
+            console.log(`📂 Directorio creado: ${publicImagesDir}`);
+          }
+          
+          const filePath = path.join(publicImagesDir, filename);
+          fs.writeFileSync(filePath, Buffer.from(buffer));
+          
+          console.log(`✅ Imagen guardada localmente: /blog-images/${filename}`);
+          // Retornar la ruta pública para usar en el blog
+          return `/blog-images/${filename}`;
+          
+        } catch (fsError) {
+          console.error('❌ Error guardando archivo local:', fsError);
+          console.log(`🔄 Fallback: Usando URL original de DALL-E`);
+          // Fallback a URL original si falla filesystem
+          return imageUrl;
+        }
+      }
       
     } catch (error) {
-      console.error('Error saving image:', error);
-      // Si falla la descarga, retornar la URL original de DALL-E
-      return imageUrl;
+      console.error('❌ Error descargando imagen:', error);
+      console.log(`🔄 Fallback: Usando imagen placeholder`);
+      // Si falla la descarga, retornar imagen placeholder
+      return '/avatars/avatar3.png';
     }
   }
 
@@ -262,11 +310,11 @@ export async function generateBlogImage(
     // Generar la imagen
     const generatedImage = await generator.generateFeaturedImage(imageRequest);
     
-    // Intentar descargar y guardar localmente
+    // Intentar descargar y guardar (Blob Storage o filesystem según entorno)
     const filename = generator.generateImageFilename(title);
-    const localPath = await generator.downloadAndSaveImage(generatedImage.url, filename);
+    const savedImageUrl = await generator.downloadAndSaveImage(generatedImage.url, filename);
     
-    return localPath;
+    return savedImageUrl;
     
   } catch (error) {
     console.error('Error en generateBlogImage:', error);
