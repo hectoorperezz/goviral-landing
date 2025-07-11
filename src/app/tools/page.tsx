@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Footer from "@/components/Footer";
 
 export default function ToolsPage() {
   const tools = [
@@ -92,8 +91,7 @@ export default function ToolsPage() {
 
 
   return (
-    <main className="min-h-screen flex flex-col bg-[#fbfbfd]">
-      
+    <>
       {/* Hero Section */}
       <section className="relative py-16 sm:py-20 md:py-24 overflow-hidden bg-gradient-to-b from-white to-[#f5f5f7]">
         {/* Background Elements */}
@@ -230,9 +228,7 @@ export default function ToolsPage() {
             </div>
           </div>
         </div>
-      </section>
-
-      <Footer />
-    </main>
+              </section>
+    </>
   );
 } 
